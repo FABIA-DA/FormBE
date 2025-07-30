@@ -1,0 +1,9 @@
+﻿GET http://localhost:5200/api/rockets
+User-Agent: IntelliJ HTTP Client/JetBrains Rider 2025.1.4
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-07-30T191140.500.txt
+
+###
+

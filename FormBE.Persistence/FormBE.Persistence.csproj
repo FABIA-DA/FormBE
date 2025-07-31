@@ -13,4 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\FormBE.Shared\FormBE.Shared.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
 </Project>

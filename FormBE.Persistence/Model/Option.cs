@@ -1,0 +1,11 @@
+﻿namespace FormBE.Persistence.Model;
+
+public class Option
+{
+    public int Id { get; set; }
+    public int SingleChoiceFieldId { get; set; }
+    public required string Name { get; set; }
+    public required SingleChoiceField SingleChoiceField { get; set; }
+    public required List<OptionField> OptionFields { get; set; }
+    public required List<OptionResponse> OptionResponses { get; set; }
+}

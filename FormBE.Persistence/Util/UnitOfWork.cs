@@ -14,7 +14,14 @@ public interface ITransactionProvider : IAsyncDisposable, IDisposable
 
 public interface IUnitOfWork
 {
-    public IRocketRepository RocketRepository { get; }
+    public IGroupRepository GroupRepository { get; }
+    public IFormRepository FormRepository { get; }
+    public IFieldGroupRepository FieldGroupRepository { get; }
+    public ISingleChoiceFieldRepository SingleChoiceFieldRepository { get; }
+    public IOptionResponseRepository OptionResponseRepository { get; }
+    public IFieldRepository FieldRepository { get; }
+    public IFieldTypeRepository FieldTypeRepository { get; }
+    public IFieldResponseRepository FieldResponseRepository { get; }
     public Task SaveChangesAsync();
 }
 
@@ -22,9 +29,16 @@ internal sealed class UnitOfWork(DatabaseContext context, ILogger<UnitOfWork> lo
     : IUnitOfWork, ITransactionProvider
 {
     private IDbContextTransaction? _transaction;
-    
-    public IRocketRepository RocketRepository => new RocketRepository(context.Rockets);
 
+    public IGroupRepository GroupRepository => new GroupRepository(context.Groups);
+    public IFormRepository FormRepository => new FormRepository(context.Forms);
+    public IFieldGroupRepository FieldGroupRepository => new FieldGroupRepository(context.FieldGroups);
+    public ISingleChoiceFieldRepository SingleChoiceFieldRepository => new SingleChoiceFieldRepository(context.SingleChoiceFields);
+    public IOptionResponseRepository OptionResponseRepository => new OptionResponseRepository(context.OptionResponses);
+    public IFieldRepository FieldRepository => new FieldRepository(context.Fields);
+    public IFieldTypeRepository FieldTypeRepository => new FieldTypeRepository(context.FieldTypes);
+    public IFieldResponseRepository FieldResponseRepository => new FieldResponseRepository(context.FieldResponses);
+    
     public async ValueTask BeginTransactionAsync()
     {
         if (_transaction is not null)

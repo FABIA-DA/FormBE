@@ -12,6 +12,7 @@ public interface IFieldGroupRepository
         GetFieldGroupsAsync(CancellationToken cancellationToken = default);
 
     public void AddFieldGroup(FieldGroup fieldGroup);
+    public void RemoveFieldGroup(FieldGroup fieldGroup);
 }
 
 internal class FieldGroupRepository(DbSet<FieldGroup> fieldGroups) : IFieldGroupRepository
@@ -31,7 +32,7 @@ internal class FieldGroupRepository(DbSet<FieldGroup> fieldGroups) : IFieldGroup
 
         FieldGroup? fieldGroup = await query.Include(f => f.FieldGroupSingleChoiceFields)
                                             .Include(f => f.FieldGroupFields)
-                                            .FirstOrDefaultAsync(cancellationToken);
+                                            .FirstOrDefaultAsync(g => g.Id == fieldGroupId, cancellationToken);
 
         return fieldGroup;
     }
@@ -49,5 +50,10 @@ internal class FieldGroupRepository(DbSet<FieldGroup> fieldGroups) : IFieldGroup
     public void AddFieldGroup(FieldGroup fieldGroup)
     {
         fieldGroups.Add(fieldGroup);
+    }
+
+    public void RemoveFieldGroup(FieldGroup fieldGroup)
+    {
+        fieldGroups.Remove(fieldGroup);
     }
 }

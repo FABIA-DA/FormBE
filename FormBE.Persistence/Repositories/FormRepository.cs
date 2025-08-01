@@ -10,6 +10,7 @@ public interface IFormRepository
 
     public ValueTask<IReadOnlyCollection<Form>> GetFormsAsync(CancellationToken cancellationToken = default);
     public void AddForm(Form form);
+    public void RemoveForm(Form form);
 }
 
 internal class FormRepository(DbSet<Form> forms) : IFormRepository
@@ -45,5 +46,10 @@ internal class FormRepository(DbSet<Form> forms) : IFormRepository
     public void AddForm(Form form)
     {
         forms.Add(form);
+    }
+
+    public void RemoveForm(Form form)
+    {
+        forms.Remove(form);
     }
 }

@@ -10,6 +10,7 @@ public interface IGroupRepository
 
     public ValueTask<IReadOnlyCollection<Group>> GetGroupsAsync(CancellationToken cancellationToken = default);
     public void AddGroup(Group group);
+    public void RemoveGroup(Group group);
 }
 
 internal class GroupRepository(DbSet<Group> groups) : IGroupRepository
@@ -45,5 +46,10 @@ internal class GroupRepository(DbSet<Group> groups) : IGroupRepository
     public void AddGroup(Group group)
     {
         groups.Add(group);
+    }
+
+    public void RemoveGroup(Group group)
+    {
+        groups.Remove(group);
     }
 }

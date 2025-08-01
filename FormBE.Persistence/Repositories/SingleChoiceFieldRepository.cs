@@ -12,6 +12,7 @@ public interface ISingleChoiceFieldRepository
         CancellationToken cancellationToken = default);
 
     public void AddSingleChoiceField(SingleChoiceField field);
+    public void RemoveSingleChoiceField(SingleChoiceField field);
 }
 
 internal class SingleChoiceFieldRepository(DbSet<SingleChoiceField> singleChoiceFields) : ISingleChoiceFieldRepository
@@ -49,5 +50,10 @@ internal class SingleChoiceFieldRepository(DbSet<SingleChoiceField> singleChoice
     public void AddSingleChoiceField(SingleChoiceField field)
     {
         singleChoiceFields.Add(field);
+    }
+
+    public void RemoveSingleChoiceField(SingleChoiceField field)
+    {
+        singleChoiceFields.Remove(field);
     }
 }

@@ -22,7 +22,7 @@ public interface IUnitOfWork
     public IFieldRepository FieldRepository { get; }
     public IFieldTypeRepository FieldTypeRepository { get; }
     public IFieldResponseRepository FieldResponseRepository { get; }
-    public Task SaveChangesAsync();
+    public Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }
 
 internal sealed class UnitOfWork(DatabaseContext context, ILogger<UnitOfWork> logger)
@@ -96,7 +96,7 @@ internal sealed class UnitOfWork(DatabaseContext context, ILogger<UnitOfWork> lo
         _transaction.Dispose();
     }
 
-    public Task SaveChangesAsync() => context.SaveChangesAsync();
+    public Task SaveChangesAsync(CancellationToken cancellationToken = default) => context.SaveChangesAsync(cancellationToken);
 
     private sealed class TransactionException(string message) : Exception(message);
 }

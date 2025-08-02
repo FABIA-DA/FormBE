@@ -5,13 +5,35 @@ namespace FormBE.Persistence.Repositories;
 
 public interface IFieldGroupRepository
 {
-    public ValueTask<FieldGroup?> GetFieldGroupByIdAsync(int fieldGroupId, bool tracking = true,
+    /// <summary>
+    /// Gets a field group by its id.
+    /// </summary>
+    /// <param name="fieldGroupId">The id of the field group.</param>
+    /// <param name="tracking">If the field group should be tracked by EF Core.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>The requested field group or null if not found.</returns>
+    public ValueTask<FieldGroup?> GetFieldGroupByIdAsync(long fieldGroupId, bool tracking = true,
                                                          CancellationToken cancellationToken = default);
-
+    
+    /// <summary>
+    /// Gets all field groups without tracking or only specified field groups with tracking.
+    /// </summary>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <param name="fieldGroupIds">An optional set of field group ids to get specific field groups with tracking</param>
+    /// <returns>All field groups without tracking or only specified field groups with tracking.</returns>
     public ValueTask<IReadOnlyCollection<FieldGroup>>
-        GetFieldGroupsAsync(CancellationToken cancellationToken = default);
+        GetFieldGroupsAsync(CancellationToken cancellationToken = default, params HashSet<long> fieldGroupIds);
 
+    /// <summary>
+    /// Adds a new field group, so that it is tracked.
+    /// </summary>
+    /// <param name="fieldGroup">The field group to add.</param>
     public void AddFieldGroup(FieldGroup fieldGroup);
+    
+    /// <summary>
+    /// Adds a field group to the tracking with the <see cref="EntityState.Deleted"/> state.
+    /// </summary>
+    /// <param name="fieldGroup">The field group to delete.</param>
     public void RemoveFieldGroup(FieldGroup fieldGroup);
 }
 
@@ -20,7 +42,7 @@ internal class FieldGroupRepository(DbSet<FieldGroup> fieldGroups) : IFieldGroup
     private IQueryable<FieldGroup> FieldGroups => fieldGroups;
     private IQueryable<FieldGroup> NoTracking => FieldGroups.AsNoTracking();
 
-    public async ValueTask<FieldGroup?> GetFieldGroupByIdAsync(int fieldGroupId, bool tracking = true,
+    public async ValueTask<FieldGroup?> GetFieldGroupByIdAsync(long fieldGroupId, bool tracking = true,
                                                                CancellationToken cancellationToken = default)
     {
         IQueryable<FieldGroup> query = FieldGroups;
@@ -38,10 +60,15 @@ internal class FieldGroupRepository(DbSet<FieldGroup> fieldGroups) : IFieldGroup
     }
 
     public async ValueTask<IReadOnlyCollection<FieldGroup>> GetFieldGroupsAsync(
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default, params HashSet<long> fieldGroupIds)
     {
         IQueryable<FieldGroup> query = NoTracking;
 
+        if (fieldGroupIds.Count > 0)
+        {
+            query = FieldGroups.Where(f => fieldGroupIds.Contains(f.Id));
+        }
+        
         IReadOnlyCollection<FieldGroup> coll = await query.ToListAsync(cancellationToken);
 
         return coll;

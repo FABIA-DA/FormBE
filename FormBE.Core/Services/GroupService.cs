@@ -10,16 +10,18 @@ public interface IGroupService
 {
     public ValueTask<IReadOnlyCollection<Group>> GetGroupsAsync(CancellationToken cancellationToken = default);
 
-    public ValueTask<OneOf<Group, NotFound>> GetGroupByIdAsync(int groupId,
+    public ValueTask<OneOf<Group, NotFound>> GetGroupByIdAsync(long groupId,
                                                                CancellationToken cancellationToken = default);
 
-    public ValueTask<OneOf<Success<Group>, ParentNotFound>> CreateGroupAsync(int? parentGroupId, string name,
-                                                             CancellationToken cancellationToken = default);
+    public ValueTask<OneOf<Success<Group>, ParentNotFound>> CreateGroupAsync(long? parentGroupId, string name,
+                                                                             CancellationToken cancellationToken
+                                                                                 = default);
 
-    public ValueTask<OneOf<Success, NotFound, ParentNotFound, ParentIsSelf>> UpdateGroupAsync(int groupId, int? parentGroupId, string name,
-                                                                CancellationToken cancellationToken = default);
+    public ValueTask<OneOf<Success, NotFound, ParentNotFound, ParentIsSelf>> UpdateGroupAsync(
+        long groupId, long? parentGroupId, string name, HashSet<long> subGroupIds, HashSet<long> formIds,
+        CancellationToken cancellationToken = default);
 
-    public ValueTask<OneOf<Success, NotFound>> DeleteGroupAsync(int groupId,
+    public ValueTask<OneOf<Success, NotFound>> DeleteGroupAsync(long groupId,
                                                                 CancellationToken cancellationToken = default);
 
     public struct ParentNotFound;
@@ -27,27 +29,30 @@ public interface IGroupService
     public struct ParentIsSelf;
 }
 
-internal class GroupService(IGroupRepository groupRepository, IUnitOfWork uow, ILogger<GroupService> logger) : IGroupService
+internal class GroupService(IGroupRepository groupRepository, IFormRepository formRepository, IUnitOfWork uow, ILogger<GroupService> logger)
+    : IGroupService
 {
     public async ValueTask<IReadOnlyCollection<Group>> GetGroupsAsync(CancellationToken cancellationToken = default) =>
         await groupRepository.GetGroupsAsync(cancellationToken);
 
-    public async ValueTask<OneOf<Group, NotFound>> GetGroupByIdAsync(int groupId,
-                                                               CancellationToken cancellationToken = default)
+    public async ValueTask<OneOf<Group, NotFound>> GetGroupByIdAsync(long groupId,
+                                                                     CancellationToken cancellationToken = default)
     {
         Group? group = await groupRepository.GetGroupByIdAsync(groupId, false, cancellationToken);
 
         if (group == null)
         {
             logger.LogInformation("Group with id {GroupId} was not found", groupId);
+
             return new NotFound();
         }
 
         return group;
     }
 
-    public async ValueTask<OneOf<Success<Group>, IGroupService.ParentNotFound>> CreateGroupAsync(int? parentGroupId, string name,
-                                                             CancellationToken cancellationToken = default)
+    public async ValueTask<OneOf<Success<Group>, IGroupService.ParentNotFound>> CreateGroupAsync(
+        long? parentGroupId, string name,
+        CancellationToken cancellationToken = default)
     {
         if (parentGroupId.HasValue)
         {
@@ -60,7 +65,7 @@ internal class GroupService(IGroupRepository groupRepository, IUnitOfWork uow, I
                 return new IGroupService.ParentNotFound();
             }
         }
-        
+
         Group group = new()
         {
             ParentId = parentGroupId,
@@ -76,10 +81,11 @@ internal class GroupService(IGroupRepository groupRepository, IUnitOfWork uow, I
         return new Success<Group>(group);
     }
 
-    public async ValueTask<OneOf<Success, NotFound, IGroupService.ParentNotFound, IGroupService.ParentIsSelf>> UpdateGroupAsync(int groupId, int? parentGroupId, string name,
-                                                                CancellationToken cancellationToken = default)
+    public async ValueTask<OneOf<Success, NotFound, IGroupService.ParentNotFound, IGroupService.ParentIsSelf>>
+        UpdateGroupAsync(long groupId, long? parentGroupId, string name, HashSet<long> subGroupIds, HashSet<long> formIds,
+                         CancellationToken cancellationToken = default)
     {
-        Group? group  = await groupRepository.GetGroupByIdAsync(groupId, true, cancellationToken);
+        Group? group = await groupRepository.GetGroupByIdAsync(groupId, true, cancellationToken);
 
         if (group == null)
         {
@@ -98,18 +104,20 @@ internal class GroupService(IGroupRepository groupRepository, IUnitOfWork uow, I
 
                     return new IGroupService.ParentIsSelf();
                 }
-                
+
                 Group? parent = await groupRepository.GetGroupByIdAsync(parentGroupId.Value, false, cancellationToken);
 
                 if (parent == null)
                 {
-                    logger.LogInformation("Tried to update group with id {GroupId} to be child of group with id {ParentId}, but parent was not found", groupId, parentGroupId.Value);
+                    logger.LogInformation("Tried to update group with id {GroupId} to be child of group with id {ParentId}, but parent was not found",
+                                          groupId, parentGroupId.Value);
+
                     return new IGroupService.ParentNotFound();
                 }
 
                 group.Parent = parent;
             }
-            
+
             group.ParentId = parentGroupId;
         }
 
@@ -117,27 +125,44 @@ internal class GroupService(IGroupRepository groupRepository, IUnitOfWork uow, I
         {
             group.Name = name;
         }
-        
+
+        if (group.SubGroups.Select(g => g.Id).Except(subGroupIds).Any())
+        {
+            IReadOnlyCollection<Group> subGroups = await groupRepository.GetGroupsAsync(cancellationToken, subGroupIds);
+
+            group.SubGroups = subGroups.ToList();
+        }
+
+        if (group.Forms.Select(f => f.Id).Except(formIds).Any())
+        {
+            IReadOnlyCollection<Form> forms = await formRepository.GetFormsAsync(cancellationToken, formIds);
+            
+            group.Forms = forms.ToList();
+        }
+
         await uow.SaveChangesAsync(cancellationToken);
-        logger.LogInformation("Updated group with id {GroupId} to parent with id {parentGroupId} and name {GroupName}", groupId, parentGroupId, name);
-        
+        logger.LogInformation("Updated group with id {GroupId} to parent with id {parentGroupId} and name {GroupName}",
+                              groupId, parentGroupId, name);
+
         return new Success();
     }
 
-    public async ValueTask<OneOf<Success, NotFound>> DeleteGroupAsync(int groupId,
-                                                                CancellationToken cancellationToken = default)
+    public async ValueTask<OneOf<Success, NotFound>> DeleteGroupAsync(long groupId,
+                                                                      CancellationToken cancellationToken = default)
     {
         Group? group = await groupRepository.GetGroupByIdAsync(groupId, true, cancellationToken);
 
         if (group == null)
         {
             logger.LogInformation("Tried to delete group with id {GroupId}, but it was not found", groupId);
+
             return new NotFound();
         }
 
+        groupRepository.RemoveGroup(group);
         await uow.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Deleted group with id {GroupId}", groupId);
-        
+
         return new Success();
     }
 }

@@ -2,7 +2,7 @@
 
 public class FieldGroup
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
     public required string Name { get; set; }
     public required List<FormFieldGroup> FormFieldGroups { get; set; }
     public required List<FieldGroupSingleChoiceField> FieldGroupSingleChoiceFields { get; set; }

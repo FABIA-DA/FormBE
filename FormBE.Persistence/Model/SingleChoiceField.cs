@@ -2,7 +2,7 @@
 
 public class SingleChoiceField
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
     public required string Name { get; set; }
     public required List<FieldGroupSingleChoiceField> FieldGroupSingleChoiceFields { get; set; }
     public required List<Option> Options { get; set; }

@@ -2,9 +2,9 @@
 
 public class FieldGroupSingleChoiceField
 {
-    public int Id { get; set; }
-    public int FieldGroupId { get; set; }
-    public int SingleChoiceFieldId { get; set; }
+    public long Id { get; set; }
+    public long FieldGroupId { get; set; }
+    public long SingleChoiceFieldId { get; set; }
     public required FieldGroup FieldGroup { get; set; }
     public required SingleChoiceField SingleChoiceField { get; set; }
 }

@@ -2,9 +2,9 @@
 
 public class FormFieldGroup
 {
-    public int Id { get; set; }
-    public int FormId { get; set; }
-    public int FieldGroupId { get; set; }
+    public long Id { get; set; }
+    public long FormId { get; set; }
+    public long FieldGroupId { get; set; }
     public required Form Form { get; set; }
     public required FieldGroup FieldGroup { get; set; }
 }

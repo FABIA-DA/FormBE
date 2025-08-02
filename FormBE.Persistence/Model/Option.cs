@@ -2,8 +2,8 @@
 
 public class Option
 {
-    public int Id { get; set; }
-    public int SingleChoiceFieldId { get; set; }
+    public long Id { get; set; }
+    public long SingleChoiceFieldId { get; set; }
     public required string Name { get; set; }
     public required SingleChoiceField SingleChoiceField { get; set; }
     public required List<OptionField> OptionFields { get; set; }

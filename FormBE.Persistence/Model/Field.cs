@@ -2,10 +2,10 @@
 
 public class Field
 {
-    public int Id { get; set; }
-    public int FieldTypeId { get; set; }
+    public long Id { get; set; }
+    public long FieldTypeId { get; set; }
     public required string Name { get; set; }
-    public required string? Description { get; set; } = null;
+    public required string? Description { get; set; }
     public bool IsOptional { get; set; }
     public required FieldType FieldType { get; set; }
     public required List<OptionField> OptionFields { get; set; }

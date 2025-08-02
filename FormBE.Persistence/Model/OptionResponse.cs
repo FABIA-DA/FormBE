@@ -2,8 +2,8 @@
 
 public class OptionResponse
 {
-    public int Id { get; set; }
-    public int OptionId { get; set; }
+    public long Id { get; set; }
+    public long OptionId { get; set; }
     public required string TelephoneNumber { get; set; }
     public Instant SubmittedAt { get; set; }
     public required Option Option { get; set; }

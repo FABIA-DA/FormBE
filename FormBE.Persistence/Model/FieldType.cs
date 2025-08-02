@@ -2,7 +2,7 @@
 
 public class FieldType
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
     public required string Name { get; set; }
     public required string? Description { get; set; } = null;
     public required string Regex { get; set; }

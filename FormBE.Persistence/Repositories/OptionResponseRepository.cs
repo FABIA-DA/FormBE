@@ -5,9 +5,32 @@ namespace FormBE.Persistence.Repositories;
 
 public interface IOptionResponseRepository
 {
-    public ValueTask<OptionResponse?> GetOptionResponseByIdAsync(int optionResponseId, bool tracking = true, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Get an option response by its id.
+    /// </summary>
+    /// <param name="optionResponseId">The id of the option response.</param>
+    /// <param name="tracking">If EF Core should track the entity.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>The specified option response.</returns>
+    public ValueTask<OptionResponse?> GetOptionResponseByIdAsync(long optionResponseId, bool tracking = true, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Get all option responses.
+    /// </summary>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>All option responses without tracking.</returns>
     public ValueTask<IReadOnlyCollection<OptionResponse>> GetOptionResponsesAsync(CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Add an option response to the tracking of EF Core.
+    /// </summary>
+    /// <param name="optionResponse">The option response to add.</param>
     public void AddOptionResponse(OptionResponse optionResponse);
+    
+    /// <summary>
+    /// Adds an option response to the tracking with the <see cref="EntityState.Deleted"/> state.
+    /// </summary>
+    /// <param name="optionResponse">The option response to delete.</param>
     public void RemoveOptionResponse(OptionResponse optionResponse);
 }
 
@@ -16,8 +39,8 @@ internal class OptionResponseRepository(DbSet<OptionResponse> optionResponses) :
     private IQueryable<OptionResponse> OptionResponses => optionResponses;
     private IQueryable<OptionResponse> NoTracking => OptionResponses.AsNoTracking();
     
-    public async ValueTask<OptionResponse?> GetOptionResponseByIdAsync(int optionResponseId, bool tracking = true,
-                                                                 CancellationToken cancellationToken = default)
+    public async ValueTask<OptionResponse?> GetOptionResponseByIdAsync(long optionResponseId, bool tracking = true,
+                                                                       CancellationToken cancellationToken = default)
     {
         IQueryable<OptionResponse> query = OptionResponses;
 

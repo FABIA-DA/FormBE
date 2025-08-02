@@ -2,9 +2,9 @@
 
 public class OptionField
 {
-    public int Id { get; set; }
-    public int OptionId { get; set; }
-    public int FieldId { get; set; }
+    public long Id { get; set; }
+    public long OptionId { get; set; }
+    public long FieldId { get; set; }
     public required Option Option { get; set; }
     public required Field Field { get; set; }
 }

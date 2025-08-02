@@ -11,21 +11,25 @@ namespace FormBE.Test;
 public class GroupServiceTest
 {
     private IGroupRepository _mockGroupRepository;
+    private IFormRepository _mockFormRepository;
     private GroupService _groupService;
 
     public GroupServiceTest()
     {
         _mockGroupRepository = Substitute.For<IGroupRepository>();
+        _mockFormRepository = Substitute.For<IFormRepository>();
         ILogger<GroupService> logger = Substitute.For<ILogger<GroupService>>();
         IUnitOfWork uow = Substitute.For<IUnitOfWork>();
-        _groupService = new GroupService(_mockGroupRepository, uow, logger);
+        _groupService = new GroupService(_mockGroupRepository, _mockFormRepository, uow, logger);
     }
 
     [Fact]
     public async Task GetGroupsAsync_Success()
     {
-        IReadOnlyCollection<Group> testGroups = GetTestGroups();
-        _mockGroupRepository.GetGroupsAsync(TestContext.Current.CancellationToken).Returns(testGroups);
+        IReadOnlyCollection<Group> testGroups = Util.GetTestGroups();
+        _mockGroupRepository
+            .GetGroupsAsync(TestContext.Current.CancellationToken, Arg.Is<HashSet<long>>(set => set.Count == 0))
+            .Returns(testGroups);
 
         IReadOnlyCollection<Group> result = await _groupService.GetGroupsAsync(TestContext.Current.CancellationToken);
 
@@ -36,10 +40,18 @@ public class GroupServiceTest
     [Fact]
     public async Task GetGroupByIdAsync_Success()
     {
-        Group testGroup = GetTestGroups().First();
-        _mockGroupRepository.GetGroupByIdAsync(0, false, TestContext.Current.CancellationToken).Returns(testGroup);
+        Group testGroup = new()
+        {
+            Id = 0,
+            Name = "Forms",
+            SubGroups = [],
+            Forms = []
+        };
+        _mockGroupRepository.GetGroupByIdAsync(testGroup.Id, false, TestContext.Current.CancellationToken)
+                            .Returns(testGroup);
 
-        OneOf<Group, NotFound> result = await _groupService.GetGroupByIdAsync(0, TestContext.Current.CancellationToken);
+        OneOf<Group, NotFound> result
+            = await _groupService.GetGroupByIdAsync(testGroup.Id, TestContext.Current.CancellationToken);
 
         result.Switch(group => group.Should().BeEquivalentTo(testGroup, "same group"),
                       notFround => result.Should().NotBeOfType<NotFound>("should be found"));
@@ -48,9 +60,13 @@ public class GroupServiceTest
     [Fact]
     public async Task GetGroupByIdAsync_NotFound()
     {
-        _mockGroupRepository.GetGroupByIdAsync(0, false, TestContext.Current.CancellationToken).Returns((Group?) null);
+        long testGroupId = 0;
 
-        OneOf<Group, NotFound> result = await _groupService.GetGroupByIdAsync(0, TestContext.Current.CancellationToken);
+        _mockGroupRepository.GetGroupByIdAsync(testGroupId, false, TestContext.Current.CancellationToken)
+                            .Returns((Group?) null);
+
+        OneOf<Group, NotFound> result
+            = await _groupService.GetGroupByIdAsync(testGroupId, TestContext.Current.CancellationToken);
 
         result.Switch(group => group.Should().NotBeOfType<Group>("should be not found"),
                       notFound =>
@@ -62,10 +78,15 @@ public class GroupServiceTest
     [Theory]
     [InlineData(null)]
     [InlineData(0)]
-    public async Task CreateGroupAsync_Success(int? parentGroupId)
+    public async Task CreateGroupAsync_Success(long? parentGroupId)
     {
-        Group parentTestGroup = GetTestGroups().First();
-
+        Group parentTestGroup = new()
+        {
+            Id = 0,
+            Name = "Forms",
+            SubGroups = [],
+            Forms = []
+        };
         if (parentGroupId.HasValue)
         {
             _mockGroupRepository.GetGroupByIdAsync(parentGroupId.Value, false, TestContext.Current.CancellationToken)
@@ -90,10 +111,13 @@ public class GroupServiceTest
     [Fact]
     public async Task CreateGroupAsync_ParentNotFound()
     {
-        _mockGroupRepository.GetGroupByIdAsync(0, true, TestContext.Current.CancellationToken).Returns((Group?) null);
+        long parentGroupId = 0;
+
+        _mockGroupRepository.GetGroupByIdAsync(parentGroupId, true, TestContext.Current.CancellationToken)
+                            .Returns((Group?) null);
 
         OneOf<Success<Group>, IGroupService.ParentNotFound> result
-            = await _groupService.CreateGroupAsync(0, "Sports", TestContext.Current.CancellationToken);
+            = await _groupService.CreateGroupAsync(parentGroupId, "Sports", TestContext.Current.CancellationToken);
 
         result.Switch(success => result.Should().NotBeOfType<Success<Group>>("parent cannot be found"),
                       parentNotFound =>
@@ -107,21 +131,41 @@ public class GroupServiceTest
     [InlineData(1, "Forms")]
     [InlineData(1, "Anything")]
     [InlineData(null, "Forms")]
-    public async Task UpdateGroupAsync_Success(int? newParentGroupId, string newName)
+    public async Task UpdateGroupAsync_Success(long? newParentGroupId, string newName)
     {
-        Group testGroup = GetTestGroups().First();
+        IReadOnlyCollection<Group> subGroups = Util.GetTestGroups();
+        IReadOnlyCollection<Form> forms = Util.GetTestForms();
 
-        _mockGroupRepository.GetGroupByIdAsync(0, true, TestContext.Current.CancellationToken).Returns(testGroup);
+        Group testGroup = new()
+        {
+            Id = 5,
+            Name = "Forms",
+            SubGroups = [],
+            Forms = []
+        };
+
+        _mockGroupRepository.GetGroupByIdAsync(testGroup.Id, true, TestContext.Current.CancellationToken)
+                            .Returns(testGroup);
+        _mockGroupRepository.GetGroupsAsync(TestContext.Current.CancellationToken, subGroups.GetIds())
+                            .Returns(subGroups);
+        _mockFormRepository.GetFormsAsync(TestContext.Current.CancellationToken, forms.GetIds()).Returns(forms);
 
         if (newParentGroupId.HasValue)
         {
-            Group parent = GetTestGroups().Skip(1).First();
-            _mockGroupRepository.GetGroupByIdAsync(newParentGroupId.Value, false, TestContext.Current.CancellationToken)
+            Group parent = new()
+            {
+                Id = newParentGroupId.Value,
+                Name = "Everything",
+                SubGroups = [],
+                Forms = []
+            };
+            _mockGroupRepository.GetGroupByIdAsync(parent.Id, false, TestContext.Current.CancellationToken)
                                 .Returns(parent);
         }
 
         OneOf<Success, NotFound, IGroupService.ParentNotFound, IGroupService.ParentIsSelf> result
-            = await _groupService.UpdateGroupAsync(0, newParentGroupId, newName, TestContext.Current.CancellationToken);
+            = await _groupService.UpdateGroupAsync(testGroup.Id, newParentGroupId, newName, subGroups.GetIds(),
+                                                   forms.GetIds(), TestContext.Current.CancellationToken);
 
         result.Switch(success =>
                       {
@@ -136,13 +180,22 @@ public class GroupServiceTest
     [Fact]
     public async Task UpdateGroupAsync_NotFound()
     {
-        Group testGroup = GetTestGroups().First();
+        long testGroupId = 0;
+        Group parent = new()
+        {
+            Id = 1,
+            Name = "Forms",
+            SubGroups = [],
+            Forms = []
+        };
 
-        _mockGroupRepository.GetGroupByIdAsync(0, true, TestContext.Current.CancellationToken).Returns((Group?) null);
-        _mockGroupRepository.GetGroupByIdAsync(1, false, TestContext.Current.CancellationToken).Returns(testGroup);
+        _mockGroupRepository.GetGroupByIdAsync(testGroupId, true, TestContext.Current.CancellationToken)
+                            .Returns((Group?) null);
+        _mockGroupRepository.GetGroupByIdAsync(parent.Id, false, TestContext.Current.CancellationToken).Returns(parent);
 
         OneOf<Success, NotFound, IGroupService.ParentNotFound, IGroupService.ParentIsSelf> result
-            = await _groupService.UpdateGroupAsync(0, 1, "", TestContext.Current.CancellationToken);
+            = await _groupService.UpdateGroupAsync(testGroupId, parent.Id, "", [], [],
+                                                   TestContext.Current.CancellationToken);
 
         result.Switch(success => result.Should().NotBeOfType<Success>("should not be found"),
                       notFound =>
@@ -157,13 +210,23 @@ public class GroupServiceTest
     [Fact]
     public async Task UpdateGroupAsync_ParentNotFound()
     {
-        Group testGroup = GetTestGroups().First();
+        Group testGroup = new()
+        {
+            Id = 0,
+            Name = "Forms",
+            SubGroups = [],
+            Forms = []
+        };
+        long parentId = 1;
 
-        _mockGroupRepository.GetGroupByIdAsync(0, true, TestContext.Current.CancellationToken).Returns(testGroup);
-        _mockGroupRepository.GetGroupByIdAsync(1, false, TestContext.Current.CancellationToken).Returns((Group?) null);
+        _mockGroupRepository.GetGroupByIdAsync(testGroup.Id, true, TestContext.Current.CancellationToken)
+                            .Returns(testGroup);
+        _mockGroupRepository.GetGroupByIdAsync(parentId, false, TestContext.Current.CancellationToken)
+                            .Returns((Group?) null);
 
         OneOf<Success, NotFound, IGroupService.ParentNotFound, IGroupService.ParentIsSelf> result
-            = await _groupService.UpdateGroupAsync(0, 1, "", TestContext.Current.CancellationToken);
+            = await _groupService.UpdateGroupAsync(testGroup.Id, parentId, "", [], [],
+                                                   TestContext.Current.CancellationToken);
 
         result.Switch(success => result.Should().NotBeOfType<Success>("parent should not be found"),
                       notFound => result.Should().NotBeOfType<NotFound>("the group should be found"),
@@ -177,12 +240,20 @@ public class GroupServiceTest
     [Fact]
     public async Task UpdateGroupAsync_ParentIsSelf()
     {
-        Group testGroup = GetTestGroups().First();
+        Group testGroup = new()
+        {
+            Id = 0,
+            Name = "Forms",
+            SubGroups = [],
+            Forms = []
+        };
 
-        _mockGroupRepository.GetGroupByIdAsync(0, true, TestContext.Current.CancellationToken).Returns(testGroup);
+        _mockGroupRepository.GetGroupByIdAsync(testGroup.Id, true, TestContext.Current.CancellationToken)
+                            .Returns(testGroup);
 
         OneOf<Success, NotFound, IGroupService.ParentNotFound, IGroupService.ParentIsSelf> result
-            = await _groupService.UpdateGroupAsync(0, 0, "", TestContext.Current.CancellationToken);
+            = await _groupService.UpdateGroupAsync(testGroup.Id, testGroup.Id, "", [], [],
+                                                   TestContext.Current.CancellationToken);
 
         result.Switch(success => result.Should().NotBeOfType<Success>("parent should be self"),
                       notFound => result.Should().NotBeOfType<NotFound>("the group should be found"),
@@ -197,12 +268,19 @@ public class GroupServiceTest
     [Fact]
     public async Task DeleteGroupAsync_Success()
     {
-        Group testGroup = GetTestGroups().First();
+        Group testGroup = new()
+        {
+            Id = 0,
+            Name = "Forms",
+            SubGroups = [],
+            Forms = []
+        };
 
-        _mockGroupRepository.GetGroupByIdAsync(0, true, TestContext.Current.CancellationToken).Returns(testGroup);
+        _mockGroupRepository.GetGroupByIdAsync(testGroup.Id, true, TestContext.Current.CancellationToken)
+                            .Returns(testGroup);
 
         OneOf<Success, NotFound>
-            result = await _groupService.DeleteGroupAsync(0, TestContext.Current.CancellationToken);
+            result = await _groupService.DeleteGroupAsync(testGroup.Id, TestContext.Current.CancellationToken);
 
         result.Switch(success =>
                       {
@@ -210,11 +288,11 @@ public class GroupServiceTest
                       },
                       notFound => result.Should().NotBeOfType<NotFound>("should be found"));
     }
-    
+
     [Fact]
     public async Task DeleteGroupAsync_NotFound()
     {
-        _mockGroupRepository.GetGroupByIdAsync(0, true, TestContext.Current.CancellationToken).Returns((Group?)null);
+        _mockGroupRepository.GetGroupByIdAsync(0, true, TestContext.Current.CancellationToken).Returns((Group?) null);
 
         OneOf<Success, NotFound>
             result = await _groupService.DeleteGroupAsync(0, TestContext.Current.CancellationToken);
@@ -225,36 +303,4 @@ public class GroupServiceTest
                           // expected
                       });
     }
-
-    private static IReadOnlyCollection<Group> GetTestGroups() =>
-    [
-        new()
-        {
-            Id = 0,
-            Name = "Forms",
-            SubGroups = [],
-            Forms = []
-        },
-        new()
-        {
-            Id = 1,
-            Name = "Art",
-            SubGroups = [],
-            Forms = []
-        },
-        new()
-        {
-            Id = 2,
-            Name = "Business",
-            SubGroups = [],
-            Forms = []
-        },
-        new()
-        {
-            Id = 3,
-            Name = "Other",
-            SubGroups = [],
-            Forms = []
-        }
-    ];
 }

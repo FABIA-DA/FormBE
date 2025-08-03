@@ -10,24 +10,29 @@ namespace FormBE.Test;
 
 public class FormServiceTest
 {
-    private IFormRepository _mockFormRepository;
-    private IGroupRepository _mockGroupRepository;
-    private IFormService _formService;
+    private readonly IFormRepository _mockFormRepository;
+    private readonly IGroupRepository _mockGroupRepository;
+    private readonly IFieldGroupRepository _mockFieldGroupRepository;
+    private readonly IFormService _formService;
 
     public FormServiceTest()
     {
         _mockFormRepository = Substitute.For<IFormRepository>();
         _mockGroupRepository = Substitute.For<IGroupRepository>();
+        _mockFieldGroupRepository = Substitute.For<IFieldGroupRepository>();
         IUnitOfWork uow = Substitute.For<IUnitOfWork>();
         ILogger<FormService> logger = Substitute.For<ILogger<FormService>>();
-        _formService = new FormService(_mockFormRepository, _mockGroupRepository, uow, logger);
+        _formService = new FormService(_mockFormRepository, _mockGroupRepository, _mockFieldGroupRepository, uow,
+                                       logger);
     }
 
     [Fact]
     public async Task GetFormsAsync_Success()
     {
-        IReadOnlyCollection<Form> testForms = Util.GetTestForms();
-        _mockFormRepository.GetFormsAsync(TestContext.Current.CancellationToken, Arg.Is<HashSet<long>>(set => set.Count == 0)).Returns(testForms);
+        List<Form> testForms = Util.GetTestForms();
+        _mockFormRepository
+            .GetFormsAsync(TestContext.Current.CancellationToken)
+            .Returns(testForms);
 
         IReadOnlyCollection<Form> result = await _formService.GetFormsAsync(TestContext.Current.CancellationToken);
 
@@ -40,7 +45,7 @@ public class FormServiceTest
     {
         Form testForm = new()
         {
-            Id = 0,
+            Id = 0L,
             GroupId = null,
             Name = "House Building Form",
             Group = null,
@@ -59,9 +64,13 @@ public class FormServiceTest
     [Fact]
     public async Task GetFormByIdAsync_NotFound()
     {
-        _mockFormRepository.GetFormByIdAsync(0, false, TestContext.Current.CancellationToken).Returns((Form?) null);
+        const long FormId = 0L;
 
-        OneOf<Form, NotFound> result = await _formService.GetFormByIdAsync(0, TestContext.Current.CancellationToken);
+        _mockFormRepository.GetFormByIdAsync(FormId, false, TestContext.Current.CancellationToken)
+                           .Returns((Form?) null);
+
+        OneOf<Form, NotFound> result
+            = await _formService.GetFormByIdAsync(FormId, TestContext.Current.CancellationToken);
 
         result.Switch(form => result.Should().NotBeOfType<Form>("should not be found"),
                       notFound =>
@@ -72,9 +81,12 @@ public class FormServiceTest
 
     [Theory]
     [InlineData(null, "Space Form")]
-    [InlineData(0, "Small Business Form")]
+    [InlineData(0L, "Small Business Form")]
     public async Task CreateFormAsync_Success(long? groupId, string name)
     {
+        List<FieldGroup> fieldGroups = Util.GetTestFieldGroups();
+        List<long> fieldGroupIds = fieldGroups.GetIds();
+        
         if (groupId.HasValue)
         {
             Group testGroup = new()
@@ -88,8 +100,10 @@ public class FormServiceTest
                                 .Returns(testGroup);
         }
 
+        _mockFieldGroupRepository.GetFieldGroupsByIdsAsync(TestContext.Current.CancellationToken, fieldGroupIds).Returns(fieldGroups);
+
         OneOf<Success<Form>, IFormService.GroupNotFound> result
-            = await _formService.CreateFormAsync(groupId, name, TestContext.Current.CancellationToken);
+            = await _formService.CreateFormAsync(groupId, name, fieldGroupIds, TestContext.Current.CancellationToken);
 
         result.Switch(success =>
                       {
@@ -103,10 +117,15 @@ public class FormServiceTest
     [Fact]
     public async Task CreateFormAsync_GroupNotFound()
     {
-        _mockGroupRepository.GetGroupByIdAsync(0, false, TestContext.Current.CancellationToken).Returns((Group?) null);
+        const long FormId = 0L;
+
+        _mockGroupRepository.GetGroupByIdAsync(FormId, false, TestContext.Current.CancellationToken)
+                            .Returns((Group?) null);
+        _mockFieldGroupRepository.GetFieldGroupsByIdsAsync(TestContext.Current.CancellationToken, []).Returns([]);
+
 
         OneOf<Success<Form>, IFormService.GroupNotFound> result
-            = await _formService.CreateFormAsync(0, "Space Form", TestContext.Current.CancellationToken);
+            = await _formService.CreateFormAsync(FormId, "Space Form", [], TestContext.Current.CancellationToken);
 
         result.Switch(success => result.Should().NotBeOfType<Success<Form>>("group should not be found"),
                       groupNotFound =>
@@ -118,21 +137,33 @@ public class FormServiceTest
     [Theory]
     [InlineData(null, "House Building Form")]
     [InlineData(null, "Space Form")]
-    [InlineData(1, "House Building Form")]
-    [InlineData(1, "Space Form")]
+    [InlineData(1L, "House Building Form")]
+    [InlineData(1L, "Space Form")]
     public async Task UpdateFormAsync_Success(long? newGroupId, string newName)
     {
+        List<FieldGroup> fieldGroups = Util.GetTestFieldGroups();
+        List<long> fieldGroupIds = fieldGroups.GetIds();
+        
         Form testForm = new()
         {
-            Id = 0,
+            Id = 0L,
             GroupId = null,
             Name = "House Building Form",
             Group = null,
             FormFieldGroups = []
         };
 
+        testForm.FormFieldGroups = fieldGroups.Take(2).Select(g => new FormFieldGroup()
+        {
+            FormId = testForm.Id,
+            FieldGroupId = g.Id,
+            Form = testForm,
+            FieldGroup = g
+        }).ToList();
+
         _mockFormRepository.GetFormByIdAsync(testForm.Id, true, TestContext.Current.CancellationToken)
                            .Returns(testForm);
+        _mockFieldGroupRepository.GetFieldGroupsByIdsAsync(TestContext.Current.CancellationToken, fieldGroupIds).Returns(fieldGroups);
 
         if (newGroupId.HasValue)
         {
@@ -149,7 +180,7 @@ public class FormServiceTest
         }
 
         OneOf<Success, NotFound, IFormService.GroupNotFound> result
-            = await _formService.UpdateFormAsync(testForm.Id, newGroupId, newName,
+            = await _formService.UpdateFormAsync(testForm.Id, newGroupId, newName, fieldGroupIds,
                                                  TestContext.Current.CancellationToken);
 
         result.Switch(success =>
@@ -166,7 +197,7 @@ public class FormServiceTest
     {
         Group testGroup = new()
         {
-            Id = 0,
+            Id = 0L,
             Name = "Test Group",
             Forms = [],
             SubGroups = []
@@ -175,9 +206,11 @@ public class FormServiceTest
         _mockGroupRepository.GetGroupByIdAsync(testGroup.Id, false, TestContext.Current.CancellationToken)
                             .Returns(testGroup);
         _mockFormRepository.GetFormByIdAsync(0, true, TestContext.Current.CancellationToken).Returns((Form?) null);
+        _mockFieldGroupRepository.GetFieldGroupsByIdsAsync(TestContext.Current.CancellationToken, []).Returns([]);
+
 
         OneOf<Success, NotFound, IFormService.GroupNotFound> result
-            = await _formService.UpdateFormAsync(0, testGroup.Id, "New Name",
+            = await _formService.UpdateFormAsync(0, testGroup.Id, "New Name", [],
                                                  TestContext.Current.CancellationToken);
 
         result.Switch(success => result.Should().NotBeOfType<Success>("should not be found"),
@@ -192,7 +225,7 @@ public class FormServiceTest
     [Fact]
     public async Task UpdateFormAsync_GroupNotFound()
     {
-        long testGroupId = 0;
+        const long TestGroupId = 0;
         Form testForm = new()
         {
             Id = 0,
@@ -202,13 +235,15 @@ public class FormServiceTest
             FormFieldGroups = []
         };
 
-        _mockGroupRepository.GetGroupByIdAsync(testGroupId, false, TestContext.Current.CancellationToken)
+        _mockGroupRepository.GetGroupByIdAsync(TestGroupId, false, TestContext.Current.CancellationToken)
                             .Returns((Group?) null);
         _mockFormRepository.GetFormByIdAsync(testForm.Id, true, TestContext.Current.CancellationToken)
                            .Returns(testForm);
+        _mockFieldGroupRepository.GetFieldGroupsByIdsAsync(TestContext.Current.CancellationToken, []).Returns([]);
+
 
         OneOf<Success, NotFound, IFormService.GroupNotFound> result
-            = await _formService.UpdateFormAsync(testForm.Id, testGroupId, "New Name",
+            = await _formService.UpdateFormAsync(testForm.Id, TestGroupId, "New Name", [],
                                                  TestContext.Current.CancellationToken);
 
         result.Switch(success => result.Should().NotBeOfType<Success>("group should not be found"),
@@ -224,7 +259,7 @@ public class FormServiceTest
     {
         Form testForm = new()
         {
-            Id = 0,
+            Id = 0L,
             GroupId = null,
             Name = "House Building Form",
             Group = null,
@@ -243,17 +278,17 @@ public class FormServiceTest
                       },
                       notFound => result.Should().NotBeOfType<NotFound>("should not be found"));
     }
-    
+
     [Fact]
     public async Task DeleteFormAsync_NotFound()
     {
-        long testFormId = 0;
+        const long TestFormId = 0L;
 
-        _mockFormRepository.GetFormByIdAsync(testFormId, true, TestContext.Current.CancellationToken)
+        _mockFormRepository.GetFormByIdAsync(TestFormId, true, TestContext.Current.CancellationToken)
                            .Returns((Form?) null);
 
         OneOf<Success, NotFound> result
-            = await _formService.DeleteFormAsync(testFormId, TestContext.Current.CancellationToken);
+            = await _formService.DeleteFormAsync(TestFormId, TestContext.Current.CancellationToken);
 
         result.Switch(success => result.Should().NotBeOfType<Success>("should not be found"),
                       notFound =>

@@ -8,19 +8,55 @@ namespace FormBE.Core.Services;
 
 public interface IGroupService
 {
+    /// <summary>
+    /// Get all groups.
+    /// </summary>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>All groups.</returns>
     public ValueTask<IReadOnlyCollection<Group>> GetGroupsAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Get a <see cref="Group"/> by its id.
+    /// </summary>
+    /// <param name="groupId">The id of the group to get.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>The <see cref="Group"/> or <see cref="NotFound"/>.</returns>
     public ValueTask<OneOf<Group, NotFound>> GetGroupByIdAsync(long groupId,
                                                                CancellationToken cancellationToken = default);
 
-    public ValueTask<OneOf<Success<Group>, ParentNotFound>> CreateGroupAsync(long? parentGroupId, string name,
+    /// <summary>
+    /// Creates a new group.
+    /// </summary>
+    /// <param name="parentGroupId">The optional group id of the parent group.</param>
+    /// <param name="name">The name of the new group.</param>
+    /// <param name="subGroupIds">A list of ids for the subgroups.</param>
+    /// <param name="formsIds">A list of ids for the forms.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Success"/> with the group or a <see cref="ParentNotFound"/></returns>
+    public ValueTask<OneOf<Success<Group>, ParentNotFound>> CreateGroupAsync(long? parentGroupId, string name, List<long> subGroupIds, List<long> formsIds,
                                                                              CancellationToken cancellationToken
                                                                                  = default);
 
+    /// <summary>
+    /// Update a group by its id.
+    /// </summary>
+    /// <param name="groupId">The group id of the group to be updated.</param>
+    /// <param name="parentGroupId">The optional group id of the new parent group.</param>
+    /// <param name="name">The new name for the group.</param>
+    /// <param name="subGroupIds">The new subgroups of the group.</param>
+    /// <param name="formIds">The new forms of the group.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Success"/> if there were no problems. A <see cref="NotFound"/> if the group was not found. A <see cref="ParentNotFound"/> if the parent group was not found. Or a <see cref="ParentIsSelf"/> if the group id is the same as the parent group id.</returns>
     public ValueTask<OneOf<Success, NotFound, ParentNotFound, ParentIsSelf>> UpdateGroupAsync(
-        long groupId, long? parentGroupId, string name, HashSet<long> subGroupIds, HashSet<long> formIds,
+        long groupId, long? parentGroupId, string name, List<long> subGroupIds, List<long> formIds,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Deletes a group.
+    /// </summary>
+    /// <param name="groupId">The group id of the group to be deleted.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Success"/> if the group was successfully deleted or a <see cref="NotFound"/> if the group was not found.</returns>
     public ValueTask<OneOf<Success, NotFound>> DeleteGroupAsync(long groupId,
                                                                 CancellationToken cancellationToken = default);
 
@@ -29,7 +65,11 @@ public interface IGroupService
     public struct ParentIsSelf;
 }
 
-internal class GroupService(IGroupRepository groupRepository, IFormRepository formRepository, IUnitOfWork uow, ILogger<GroupService> logger)
+internal class GroupService(
+    IGroupRepository groupRepository,
+    IFormRepository formRepository,
+    IUnitOfWork uow,
+    ILogger<GroupService> logger)
     : IGroupService
 {
     public async ValueTask<IReadOnlyCollection<Group>> GetGroupsAsync(CancellationToken cancellationToken = default) =>
@@ -51,7 +91,7 @@ internal class GroupService(IGroupRepository groupRepository, IFormRepository fo
     }
 
     public async ValueTask<OneOf<Success<Group>, IGroupService.ParentNotFound>> CreateGroupAsync(
-        long? parentGroupId, string name,
+        long? parentGroupId, string name, List<long> subGroupIds,  List<long> formIds,
         CancellationToken cancellationToken = default)
     {
         if (parentGroupId.HasValue)
@@ -65,13 +105,17 @@ internal class GroupService(IGroupRepository groupRepository, IFormRepository fo
                 return new IGroupService.ParentNotFound();
             }
         }
+        
+        IReadOnlyCollection<Group> subgroups = subGroupIds.Count == 0 ? [] : await groupRepository.GetGroupsByIdsAsync(cancellationToken, subGroupIds);
 
+        IReadOnlyCollection<Form> forms = formIds.Count == 0 ? [] : await formRepository.GetFormsByIdsAsync(cancellationToken, formIds);
+        
         Group group = new()
         {
             ParentId = parentGroupId,
             Name = name,
-            SubGroups = [],
-            Forms = []
+            SubGroups = subgroups.ToList(),
+            Forms = forms.ToList()
         };
 
         groupRepository.AddGroup(group);
@@ -82,7 +126,8 @@ internal class GroupService(IGroupRepository groupRepository, IFormRepository fo
     }
 
     public async ValueTask<OneOf<Success, NotFound, IGroupService.ParentNotFound, IGroupService.ParentIsSelf>>
-        UpdateGroupAsync(long groupId, long? parentGroupId, string name, HashSet<long> subGroupIds, HashSet<long> formIds,
+        UpdateGroupAsync(long groupId, long? parentGroupId, string name, List<long> subGroupIds,
+                         List<long> formIds,
                          CancellationToken cancellationToken = default)
     {
         Group? group = await groupRepository.GetGroupByIdAsync(groupId, true, cancellationToken);
@@ -94,28 +139,24 @@ internal class GroupService(IGroupRepository groupRepository, IFormRepository fo
             return new NotFound();
         }
 
-        if (group.ParentId != parentGroupId)
+        if (parentGroupId.HasValue
+            && group.ParentId != parentGroupId.Value)
         {
-            if (parentGroupId.HasValue)
+            if (groupId == parentGroupId.Value)
             {
-                if (groupId == parentGroupId.Value)
-                {
-                    logger.LogInformation("Tried to update parent of group with id {GroupId} to self", groupId);
+                logger.LogInformation("Tried to update parent of group with id {GroupId} to self", groupId);
 
-                    return new IGroupService.ParentIsSelf();
-                }
+                return new IGroupService.ParentIsSelf();
+            }
 
-                Group? parent = await groupRepository.GetGroupByIdAsync(parentGroupId.Value, false, cancellationToken);
+            Group? parent = await groupRepository.GetGroupByIdAsync(parentGroupId.Value, false, cancellationToken);
 
-                if (parent == null)
-                {
-                    logger.LogInformation("Tried to update group with id {GroupId} to be child of group with id {ParentId}, but parent was not found",
-                                          groupId, parentGroupId.Value);
+            if (parent == null)
+            {
+                logger.LogInformation("Tried to update group with id {GroupId} to be child of group with id {ParentId}, but parent was not found",
+                                      groupId, parentGroupId.Value);
 
-                    return new IGroupService.ParentNotFound();
-                }
-
-                group.Parent = parent;
+                return new IGroupService.ParentNotFound();
             }
 
             group.ParentId = parentGroupId;
@@ -126,17 +167,23 @@ internal class GroupService(IGroupRepository groupRepository, IFormRepository fo
             group.Name = name;
         }
 
-        if (group.SubGroups.Select(g => g.Id).Except(subGroupIds).Any())
+        HashSet<long> currentSubgroups = group.SubGroups.Select(g => g.Id).ToHashSet();
+        HashSet<long> newSubgroups = subGroupIds.ToHashSet();
+        
+        if (!currentSubgroups.SetEquals(newSubgroups))
         {
-            IReadOnlyCollection<Group> subGroups = await groupRepository.GetGroupsAsync(cancellationToken, subGroupIds);
+            IReadOnlyCollection<Group> subGroups = await groupRepository.GetGroupsByIdsAsync(cancellationToken, subGroupIds);
 
             group.SubGroups = subGroups.ToList();
         }
-
-        if (group.Forms.Select(f => f.Id).Except(formIds).Any())
+        
+        HashSet<long> currentForms = group.Forms.Select(g => g.Id).ToHashSet();
+        HashSet<long> newForms = formIds.ToHashSet();
+        
+        if (!currentForms.SetEquals(newForms))
         {
-            IReadOnlyCollection<Form> forms = await formRepository.GetFormsAsync(cancellationToken, formIds);
-            
+            IReadOnlyCollection<Form> forms = await formRepository.GetFormsByIdsAsync(cancellationToken, formIds);
+
             group.Forms = forms.ToList();
         }
 

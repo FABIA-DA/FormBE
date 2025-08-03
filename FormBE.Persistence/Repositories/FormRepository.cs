@@ -10,18 +10,25 @@ public interface IFormRepository
     /// </summary>
     /// <param name="formId">The id of the form to get.</param>
     /// <param name="tracking">If EF Core should track the entity.</param>
-    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>The form or null if not found.</returns>
     public ValueTask<Form?> GetFormByIdAsync(long formId, bool tracking = true,
                                              CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get all forms or only those which ids are in the <see cref="formIds"/> set.
+    /// Get all forms without tracking.
     /// </summary>
-    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete</param>
-    /// <param name="formIds">An optional set for ids to get with tracking.</param>
-    /// <returns>All forms without tracking or forms from the <see cref="formIds"/> with tracking</returns>
-    public ValueTask<IReadOnlyCollection<Form>> GetFormsAsync(CancellationToken cancellationToken = default, params HashSet<long> formIds);
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>All forms without tracking.</returns>
+    public ValueTask<IReadOnlyCollection<Form>> GetFormsAsync(CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Get a subset of existing forms with tracking.
+    /// </summary>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <param name="formIds">The ids of the forms to get.</param>
+    /// <returns>Gets the requested forms with tracking.</returns>
+    public ValueTask<IReadOnlyCollection<Form>> GetFormsByIdsAsync(CancellationToken cancellationToken = default, params List<long> formIds);
     
     /// <summary>
     /// Adds tracking for this form.
@@ -57,15 +64,24 @@ internal class FormRepository(DbSet<Form> forms) : IFormRepository
         return form;
     }
 
-    public async ValueTask<IReadOnlyCollection<Form>> GetFormsAsync(CancellationToken cancellationToken = default, params HashSet<long> formIds)
+    public async ValueTask<IReadOnlyCollection<Form>> GetFormsAsync(CancellationToken cancellationToken = default)
     {
         IQueryable<Form> query = NoTracking;
 
-        if (formIds.Count > 0)
-        {
-            query = Forms.Where(x => formIds.Contains(x.Id));
-        }
+        IReadOnlyCollection<Form> coll = await query.ToListAsync(cancellationToken);
 
+        return coll;
+    }
+
+    public async ValueTask<IReadOnlyCollection<Form>> GetFormsByIdsAsync(CancellationToken cancellationToken = default, params List<long> formIds)
+    {
+        if (formIds.Count == 0)
+        {
+            return [];
+        }
+        
+        IQueryable<Form> query = Forms.Where(f => formIds.Contains(f.Id));
+        
         IReadOnlyCollection<Form> coll = await query.ToListAsync(cancellationToken);
 
         return coll;

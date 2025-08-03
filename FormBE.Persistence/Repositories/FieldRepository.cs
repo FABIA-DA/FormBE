@@ -16,12 +16,19 @@ public interface IFieldRepository
                                                CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get all fields without tracking or only specified fields with tracking. 
+    /// Get all fields without tracking. 
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <param name="fieldIds">The optional set of ids to specifically get fields.</param>
-    /// <returns>All fields without tracking or specified fields with tracking.</returns>
-    public ValueTask<IReadOnlyCollection<Field>> GetAllFields(CancellationToken cancellationToken = default, params HashSet<long> fieldIds);
+    /// <returns>All fields without tracking.</returns>
+    public ValueTask<IReadOnlyCollection<Field>> GetAllFields(CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Get a subset of existing fields with tracking.
+    /// </summary>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <param name="fieldIds">The ids of the fields to get.</param>
+    /// <returns>Gets the requested fields with tracking.</returns>
+    public ValueTask<IReadOnlyCollection<Field>> GetFieldsByIdsAsync(CancellationToken cancellationToken = default, params List<long> fieldIds);
     
     /// <summary>
     /// Add a field to EF Cores tracking.
@@ -57,17 +64,26 @@ internal class FieldRepository(DbSet<Field> fields) : IFieldRepository
         return field;
     }
 
-    public async ValueTask<IReadOnlyCollection<Field>> GetAllFields(CancellationToken cancellationToken = default, params HashSet<long> fieldIds)
+    public async ValueTask<IReadOnlyCollection<Field>> GetAllFields(CancellationToken cancellationToken = default)
     {
         IQueryable<Field> query = NoTracking;
 
-        if (fieldIds.Count > 0)
-        {
-            query = Fields.Where(f => fieldIds.Contains(f.Id));
-        }
-
         IReadOnlyCollection<Field> coll = await query.ToListAsync(cancellationToken);
 
+        return coll;
+    }
+
+    public async ValueTask<IReadOnlyCollection<Field>> GetFieldsByIdsAsync(CancellationToken cancellationToken = default, params List<long> fieldIds)
+    {
+        if (fieldIds.Count == 0)
+        {
+            return [];
+        }
+        
+        IQueryable<Field> query = Fields.Where(f => fieldIds.Contains(f.Id));
+        
+        IReadOnlyCollection<Field> coll = await query.ToListAsync(cancellationToken);
+        
         return coll;
     }
 

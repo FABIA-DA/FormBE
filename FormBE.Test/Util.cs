@@ -4,7 +4,7 @@ namespace FormBE.Test;
 
 public static class Util
 {
-    public static IReadOnlyCollection<Group> GetTestGroups() =>
+    public static List<Group> GetTestGroups() =>
     [
         new()
         {
@@ -36,7 +36,7 @@ public static class Util
         }
     ];
 
-    public static IReadOnlyCollection<Form> GetTestForms() =>
+    public static List<Form> GetTestForms() =>
     [
         new()
         {
@@ -72,7 +72,7 @@ public static class Util
         }
     ];
 
-    public static IReadOnlyCollection<FieldGroup> GetTestFieldGroups() =>
+    public static List<FieldGroup> GetTestFieldGroups() =>
     [
         new()
         {
@@ -108,12 +108,12 @@ public static class Util
         }
     ];
 
-    public static HashSet<long> GetIds(this IReadOnlyCollection<Group> coll) => coll.Select(i => i.Id).ToHashSet();
-    public static HashSet<long> GetIds(this IReadOnlyCollection<Form> coll) => coll.Select(i => i.Id).ToHashSet();
-    public static HashSet<long> GetIds(this IReadOnlyCollection<FieldGroup> coll) => coll.Select(i => i.Id).ToHashSet();
+    public static List<long> GetIds(this IEnumerable<Group> coll) => coll.Select(i => i.Id).ToList();
+    public static List<long> GetIds(this IEnumerable<Form> coll) => coll.Select(i => i.Id).ToList();
+    public static List<long> GetIds(this IEnumerable<FieldGroup> coll) => coll.Select(i => i.Id).ToList();
 
-    public static HashSet<long> GetIds(this IReadOnlyCollection<SingleChoiceField> coll) =>
-        coll.Select(i => i.Id).ToHashSet();
+    public static List<long> GetIds(this IEnumerable<SingleChoiceField> coll) =>
+        coll.Select(i => i.Id).ToList();
 
-    public static HashSet<long> GetIds(this IReadOnlyCollection<Field> coll) => coll.Select(i => i.Id).ToHashSet();
+    public static List<long> GetIds(this IEnumerable<Field> coll) => coll.Select(i => i.Id).ToList();
 }

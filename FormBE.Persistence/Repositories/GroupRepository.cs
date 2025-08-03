@@ -16,12 +16,19 @@ public interface IGroupRepository
                                                CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets all groups without tracking if the <see cref="groupIds"/> are empty or gets only those groups, which ids are in <see cref="groupIds"/> and enables tracking for those.
+    /// Gets all groups without tracking.
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <param name="groupIds">An optional set of ids to get if you only need those, but with tracking.</param>
-    /// <returns>All groups without tracking if <see cref="groupIds"/> is empty or only those groups, which ids are in <see cref="groupIds"/> with tracking</returns>
-    public ValueTask<IReadOnlyCollection<Group>> GetGroupsAsync(CancellationToken cancellationToken = default, params HashSet<long> groupIds);
+    /// <returns>All groups without tracking.</returns>
+    public ValueTask<IReadOnlyCollection<Group>> GetGroupsAsync(CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Get a subset of existing groups with tracking.
+    /// </summary>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <param name="groupIds">The ids of the groups to get.</param>
+    /// <returns>Gets the requested groups with tracking.</returns>
+    public ValueTask<IReadOnlyCollection<Group>> GetGroupsByIdsAsync(CancellationToken cancellationToken = default, params List<long> groupIds);
     
     /// <summary>
     /// Adds a <see cref="group"/> to the tracking of EF Core.
@@ -58,17 +65,26 @@ internal class GroupRepository(DbSet<Group> groups) : IGroupRepository
         return group;
     }
 
-    public async ValueTask<IReadOnlyCollection<Group>> GetGroupsAsync(CancellationToken cancellationToken = default, params HashSet<long> groupIds)
+    public async ValueTask<IReadOnlyCollection<Group>> GetGroupsAsync(CancellationToken cancellationToken = default)
     {
         IQueryable<Group> query = NoTracking;
-
-        if (groupIds.Count > 0)
-        {
-            query = Groups.Where(g => groupIds.Contains(g.Id));
-        }
-
+        
         IReadOnlyCollection<Group> coll = await query.ToListAsync(cancellationToken);
 
+        return coll;
+    }
+
+    public async ValueTask<IReadOnlyCollection<Group>> GetGroupsByIdsAsync(CancellationToken cancellationToken = default, params List<long> groupIds)
+    {
+        if (groupIds.Count == 0)
+        {
+            return [];
+        }
+        
+        IQueryable<Group> query = Groups.Where(g => groupIds.Contains(g.Id));
+        
+        IReadOnlyCollection<Group> coll = await query.ToListAsync(cancellationToken);
+        
         return coll;
     }
 

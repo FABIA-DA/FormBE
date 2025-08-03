@@ -16,13 +16,20 @@ public interface ISingleChoiceFieldRepository
                                                                        CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get all single choice fields without tracking or only specified ones with tracking.
+    /// Get all single choice fields without tracking.
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <param name="singleChoiceFieldIds">An optional set of ids to get with tracking.</param>
-    /// <returns>All single choice fields without tracking or specified ones with tracking.</returns>
+    /// <returns>All single choice fields without tracking.</returns>
     public ValueTask<IReadOnlyCollection<SingleChoiceField>> GetSingleChoiceFieldsAsync(
-        CancellationToken cancellationToken = default, params HashSet<long> singleChoiceFieldIds);
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Get a subset of existing single choice fields with tracking.
+    /// </summary>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <param name="singleChoiceFieldIds">The ids of the single choice fields to get.</param>
+    /// <returns>Gets the requested single choice fields with tracking.</returns>
+    public ValueTask<IReadOnlyCollection<SingleChoiceField>> GetSingleChoiceFieldsByIdsAsync(CancellationToken cancellationToken = default, params List<long> singleChoiceFieldIds);
 
     /// <summary>
     /// Add a single choice field to the tracking of EF Core.
@@ -60,17 +67,27 @@ internal class SingleChoiceFieldRepository(DbSet<SingleChoiceField> singleChoice
     }
 
     public async ValueTask<IReadOnlyCollection<SingleChoiceField>> GetSingleChoiceFieldsAsync(
-        CancellationToken cancellationToken = default, params HashSet<long> singleChoiceFieldIds)
+        CancellationToken cancellationToken = default)
     {
         IQueryable<SingleChoiceField> query = NoTracking;
 
-        if (singleChoiceFieldIds.Count > 0)
-        {
-            query = SingleChoiceFields.Where(f => singleChoiceFieldIds.Contains(f.Id));
-        }
-
         IReadOnlyCollection<SingleChoiceField> coll = await query.ToListAsync(cancellationToken);
 
+        return coll;
+    }
+
+    public async ValueTask<IReadOnlyCollection<SingleChoiceField>> GetSingleChoiceFieldsByIdsAsync(CancellationToken cancellationToken = default,
+                                                                                             params List<long> singleChoiceFieldIds)
+    {
+        if (singleChoiceFieldIds.Count == 0)
+        {
+            return [];
+        }
+        
+        IQueryable<SingleChoiceField> query = SingleChoiceFields.Where(f => singleChoiceFieldIds.Contains(f.Id));
+        
+        IReadOnlyCollection<SingleChoiceField> coll = await query.ToListAsync(cancellationToken);
+        
         return coll;
     }
 

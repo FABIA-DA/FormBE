@@ -16,13 +16,20 @@ public interface IFieldGroupRepository
                                                          CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// Gets all field groups without tracking or only specified field groups with tracking.
+    /// Gets all field groups without tracking.
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <param name="fieldGroupIds">An optional set of field group ids to get specific field groups with tracking</param>
-    /// <returns>All field groups without tracking or only specified field groups with tracking.</returns>
+    /// <returns>All field groups without tracking.</returns>
     public ValueTask<IReadOnlyCollection<FieldGroup>>
-        GetFieldGroupsAsync(CancellationToken cancellationToken = default, params HashSet<long> fieldGroupIds);
+        GetFieldGroupsAsync(CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Get a subset of existing field groups with tracking.
+    /// </summary>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <param name="fieldGroupIds">The ids of the field groups to get.</param>
+    /// <returns>Gets the requested field groups with tracking.</returns>
+    public ValueTask<IReadOnlyCollection<FieldGroup>> GetFieldGroupsByIdsAsync(CancellationToken cancellationToken = default, params List<long> fieldGroupIds);
 
     /// <summary>
     /// Adds a new field group, so that it is tracked.
@@ -60,14 +67,23 @@ internal class FieldGroupRepository(DbSet<FieldGroup> fieldGroups) : IFieldGroup
     }
 
     public async ValueTask<IReadOnlyCollection<FieldGroup>> GetFieldGroupsAsync(
-        CancellationToken cancellationToken = default, params HashSet<long> fieldGroupIds)
+        CancellationToken cancellationToken = default)
     {
         IQueryable<FieldGroup> query = NoTracking;
+        
+        IReadOnlyCollection<FieldGroup> coll = await query.ToListAsync(cancellationToken);
 
-        if (fieldGroupIds.Count > 0)
+        return coll;
+    }
+
+    public async ValueTask<IReadOnlyCollection<FieldGroup>> GetFieldGroupsByIdsAsync(CancellationToken cancellationToken = default, params List<long> fieldGroupIds)
+    {
+        if (fieldGroupIds.Count == 0)
         {
-            query = FieldGroups.Where(f => fieldGroupIds.Contains(f.Id));
+            return [];
         }
+        
+        IQueryable<FieldGroup> query = FieldGroups.Where(g => fieldGroupIds.Contains(g.Id));
         
         IReadOnlyCollection<FieldGroup> coll = await query.ToListAsync(cancellationToken);
 

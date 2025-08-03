@@ -13,10 +13,15 @@ public sealed class DatabaseContext(DbContextOptions<DatabaseContext> options) :
     public DbSet<Form> Forms { get; set; }
     public DbSet<FieldGroup> FieldGroups { get; set; }
     public DbSet<SingleChoiceField> SingleChoiceFields { get; set; }
+    public DbSet<Option> Options { get; set; }
     public DbSet<OptionResponse> OptionResponses { get; set; }
     public DbSet<Field> Fields { get; set; }
     public DbSet<FieldType> FieldTypes { get; set; }
     public DbSet<FieldResponse> FieldResponses { get; set; }
+    public DbSet<FieldGroupSingleChoiceField> FieldGroupSingleChoiceFields { get; set; }
+    public DbSet<FieldGroupField> FieldGroupFields { get; set; }
+    public DbSet<FormFieldGroup> FormFieldGroups { get; set; }
+    public DbSet<OptionField> OptionFields { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

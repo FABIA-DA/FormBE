@@ -37,13 +37,25 @@ public interface IFormRepository
     public void AddForm(Form form);
     
     /// <summary>
-    /// Adds tracking for the form with the <see cref="EntityState.Deleted"/> state.
+    /// Begins tracking for the form with the <see cref="EntityState.Deleted"/> state.
     /// </summary>
     /// <param name="form">The form to delete.</param>
     public void RemoveForm(Form form);
+    
+    /// <summary>
+    /// Adds tracking for the new <see cref="FormFieldGroup"/>.
+    /// </summary>
+    /// <param name="fieldGroup">The item to add.</param>
+    public void AddFormFieldGroup(FormFieldGroup fieldGroup);
+    
+    /// <summary>
+    /// Begins tracking of the <see cref="FormFieldGroup"/> with the <see cref="EntityState.Deleted"/> state.
+    /// </summary>
+    /// <param name="formFieldGroup">The item to be deleted.</param>
+    public void RemoveFormFieldGroup(FormFieldGroup formFieldGroup);
 }
 
-internal class FormRepository(DbSet<Form> forms) : IFormRepository
+internal class FormRepository(DbSet<Form> forms, DbSet<FormFieldGroup> formFieldGroups) : IFormRepository
 {
     private IQueryable<Form> Forms => forms;
     private IQueryable<Form> NoTracking => Forms.AsNoTracking();
@@ -95,5 +107,15 @@ internal class FormRepository(DbSet<Form> forms) : IFormRepository
     public void RemoveForm(Form form)
     {
         forms.Remove(form);
+    }
+
+    public void AddFormFieldGroup(FormFieldGroup fieldGroup)
+    {
+        formFieldGroups.Add(fieldGroup);
+    }
+
+    public void RemoveFormFieldGroup(FormFieldGroup formFieldGroup)
+    {
+        formFieldGroups.Remove(formFieldGroup);
     }
 }

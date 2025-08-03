@@ -1,6 +1,7 @@
 ﻿using FormBE.Persistence.Model;
 using FormBE.Persistence.Repositories;
 using FormBE.Persistence.Util;
+using FormBE.Shared;
 using OneOf.Types;
 using OneOf;
 
@@ -29,7 +30,7 @@ public interface IFormService
     /// </summary>
     /// <param name="groupId">The optional group id of the new form.</param>
     /// <param name="name">The name of the new form.</param>
-    /// <param name="fieldGroupIds">The field groups of the form.</param>
+    /// <param name="fieldGroupIds">The field groups of the form, where invalid field group ids are ignored.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Success"/> with the new <see cref="Form"/> or a <see cref="GroupNotFound"/> if the group was not found.</returns>
     public ValueTask<OneOf<Success<Form>, GroupNotFound>> CreateFormAsync(
@@ -41,7 +42,7 @@ public interface IFormService
     /// <param name="formId">The id of the form to update.</param>
     /// <param name="groupId">The new group id.</param>
     /// <param name="name">The new name.</param>
-    /// <param name="fieldGroupIds">The ids of the new field groups.</param>
+    /// <param name="fieldGroupIds">The ids of the new field groups, where invalid field group ids are ignored.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Success"/>. A <see cref="NotFound"/> if the form id was not found or a <see cref="GroupNotFound"/> if the group id was not found.</returns>
     public ValueTask<OneOf<Success, NotFound, GroupNotFound>> UpdateFormAsync(
@@ -106,7 +107,7 @@ internal class FormService(
                 return new IFormService.GroupNotFound();
             }
         }
-        
+
         IReadOnlyCollection<FieldGroup> fieldGroups
             = await fieldGroupRepository.GetFieldGroupsByIdsAsync(cancellationToken, fieldGroupIds);
 
@@ -157,19 +158,30 @@ internal class FormService(
             form.Name = name;
         }
 
-        HashSet<long> currentFieldGroupIds = form.FormFieldGroups.Select(ffg => ffg.FieldGroupId).ToHashSet();
-        HashSet<long> newFieldGroupIds = fieldGroupIds.ToHashSet();
-        
-        if (!currentFieldGroupIds.SetEquals(newFieldGroupIds))
+        if (!form.FormFieldGroups.IdsEqual(fieldGroupIds, ffg => ffg.FieldGroupId))
         {
-            IReadOnlyCollection<FieldGroup> fieldGroups
-                = await fieldGroupRepository.GetFieldGroupsByIdsAsync(cancellationToken, fieldGroupIds);
-            
-            form.FormFieldGroups = fieldGroups.Select(g => new FormFieldGroup()
+            (List<long> newIds, List<FormFieldGroup> stillItems, List<FormFieldGroup> oldItems)
+                = form.FormFieldGroups.SeparateItemsById(fieldGroupIds, ffg => ffg.FieldGroupId);
+
+            foreach (FormFieldGroup ffg in oldItems)
             {
-                Form = form,
-                FieldGroup = g
-            }).ToList();
+                formRepository.RemoveFormFieldGroup(ffg);
+            }
+
+            IReadOnlyCollection<FormFieldGroup> newFormFieldGroups
+                = (await fieldGroupRepository.GetFieldGroupsByIdsAsync(cancellationToken, newIds))
+                  .Select(fg => new FormFieldGroup()
+                  {
+                      Form = form,
+                      FieldGroup = fg
+                  }).ToList();
+
+            foreach (FormFieldGroup ffg in newFormFieldGroups)
+            {
+                formRepository.AddFormFieldGroup(ffg);
+            }
+            
+            form.FormFieldGroups = stillItems.Concat(newFormFieldGroups).ToList();
         }
 
         await uow.SaveChangesAsync(cancellationToken);

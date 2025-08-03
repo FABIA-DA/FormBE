@@ -31,9 +31,9 @@ internal sealed class UnitOfWork(DatabaseContext context, ILogger<UnitOfWork> lo
     private IDbContextTransaction? _transaction;
 
     public IGroupRepository GroupRepository => new GroupRepository(context.Groups);
-    public IFormRepository FormRepository => new FormRepository(context.Forms);
-    public IFieldGroupRepository FieldGroupRepository => new FieldGroupRepository(context.FieldGroups);
-    public ISingleChoiceFieldRepository SingleChoiceFieldRepository => new SingleChoiceFieldRepository(context.SingleChoiceFields);
+    public IFormRepository FormRepository => new FormRepository(context.Forms, context.FormFieldGroups);
+    public IFieldGroupRepository FieldGroupRepository => new FieldGroupRepository(context.FieldGroups, context.FieldGroupSingleChoiceFields, context.FieldGroupFields);
+    public ISingleChoiceFieldRepository SingleChoiceFieldRepository => new SingleChoiceFieldRepository(context.SingleChoiceFields, context.Options, context.OptionFields);
     public IOptionResponseRepository OptionResponseRepository => new OptionResponseRepository(context.OptionResponses);
     public IFieldRepository FieldRepository => new FieldRepository(context.Fields);
     public IFieldTypeRepository FieldTypeRepository => new FieldTypeRepository(context.FieldTypes);

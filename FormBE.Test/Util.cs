@@ -108,12 +108,129 @@ public static class Util
         }
     ];
 
+    public static List<SingleChoiceField> GetTestSingleChoiceFields() =>
+    [
+        new()
+        {
+            Id = 0,
+            Name = "Gender",
+            Options = [],
+            FieldGroupSingleChoiceFields = [],
+        },
+        new()
+        {
+            Id = 1,
+            Name = "Organization Status",
+            Options = [],
+            FieldGroupSingleChoiceFields = [],
+        },
+        new()
+        {
+            Id = 2,
+            Name = "Personal Status",
+            Options = [],
+            FieldGroupSingleChoiceFields = [],
+        },
+        new()
+        {
+            Id = 3,
+            Name = "Business Status",
+            Options = [],
+            FieldGroupSingleChoiceFields = [],
+        }
+    ];
+
+    public static List<Field> GetTestFields() => [
+        new()
+        {
+            Id = 0,
+            FieldTypeId = 0,
+            Name = "Postal Code",
+            Description = null,
+            IsOptional = false,
+            FieldResponses = [],
+            FieldType = new()
+            {
+                Id = 0,
+                Name = "Number",
+                Description = null,
+                Regex = "",
+                Fields = []
+            },
+            FieldGroupFields = [],
+            OptionFields = []
+        },
+        new()
+        {
+            Id = 1,
+            FieldTypeId = 0,
+            Name = "Street Number",
+            Description = null,
+            IsOptional = false,
+            FieldResponses = [],
+            FieldType = new()
+            {
+                Id = 0,
+                Name = "Number",
+                Description = null,
+                Regex = "",
+                Fields = []
+            },
+            FieldGroupFields = [],
+            OptionFields = []
+        },
+        new()
+        {
+            Id = 2,
+            FieldTypeId = 0,
+            Name = "How old are you",
+            Description = null,
+            IsOptional = false,
+            FieldResponses = [],
+            FieldType = new()
+            {
+                Id = 0,
+                Name = "Number",
+                Description = null,
+                Regex = "",
+                Fields = []
+            },
+            FieldGroupFields = [],
+            OptionFields = []
+        },
+        new()
+        {
+            Id = 3,
+            FieldTypeId = 0,
+            Name = "Height",
+            Description = null,
+            IsOptional = false,
+            FieldResponses = [],
+            FieldType = new()
+            {
+                Id = 0,
+                Name = "Number",
+                Description = null,
+                Regex = "",
+                Fields = []
+            },
+            FieldGroupFields = [],
+            OptionFields = []
+        }
+    ];
+
+    public static List<(long Id, string Name, List<long> FieldIds)> GetTestOptions() => [
+        (0, "Option 1", [0, 1]),
+        (1, "Option 2", [0]),
+        (2, "Option 3", []),
+        (3, "Option 4", [2, 4])
+    ];
+
     public static List<long> GetIds(this IEnumerable<Group> coll) => coll.Select(i => i.Id).ToList();
     public static List<long> GetIds(this IEnumerable<Form> coll) => coll.Select(i => i.Id).ToList();
     public static List<long> GetIds(this IEnumerable<FieldGroup> coll) => coll.Select(i => i.Id).ToList();
 
-    public static List<long> GetIds(this IEnumerable<SingleChoiceField> coll) =>
-        coll.Select(i => i.Id).ToList();
+    public static List<long> GetIds(this IEnumerable<SingleChoiceField> coll) => coll.Select(i => i.Id).ToList();
 
     public static List<long> GetIds(this IEnumerable<Field> coll) => coll.Select(i => i.Id).ToList();
 }

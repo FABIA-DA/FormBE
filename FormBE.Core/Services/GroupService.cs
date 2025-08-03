@@ -1,6 +1,7 @@
 ﻿using FormBE.Persistence.Model;
 using FormBE.Persistence.Repositories;
 using FormBE.Persistence.Util;
+using FormBE.Shared;
 using OneOf.Types;
 using OneOf;
 
@@ -166,11 +167,8 @@ internal class GroupService(
         {
             group.Name = name;
         }
-
-        HashSet<long> currentSubgroups = group.SubGroups.Select(g => g.Id).ToHashSet();
-        HashSet<long> newSubgroups = subGroupIds.ToHashSet();
         
-        if (!currentSubgroups.SetEquals(newSubgroups))
+        if (!group.SubGroups.IdsEqual(subGroupIds, g => g.Id))
         {
             IReadOnlyCollection<Group> subGroups = await groupRepository.GetGroupsByIdsAsync(cancellationToken, subGroupIds);
 
@@ -180,7 +178,7 @@ internal class GroupService(
         HashSet<long> currentForms = group.Forms.Select(g => g.Id).ToHashSet();
         HashSet<long> newForms = formIds.ToHashSet();
         
-        if (!currentForms.SetEquals(newForms))
+        if (!group.Forms.IdsEqual(formIds, f => f.Id))
         {
             IReadOnlyCollection<Form> forms = await formRepository.GetFormsByIdsAsync(cancellationToken, formIds);
 

@@ -2,6 +2,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\FormBE.Persistence\FormBE.Persistence.csproj"/>
+        <ProjectReference Include="..\FormBE.Shared\FormBE.Shared.csproj"/>
         <InternalsVisibleTo Include="FormBE.Test"/>
         <InternalsVisibleTo Include="DynamicProxyGenAssembly2"/>
     </ItemGroup>

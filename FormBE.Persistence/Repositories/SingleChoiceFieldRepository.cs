@@ -42,9 +42,27 @@ public interface ISingleChoiceFieldRepository
     /// </summary>
     /// <param name="field">The single choice field to delete.</param>
     public void RemoveSingleChoiceField(SingleChoiceField field);
+
+    /// <summary>
+    /// Begins tracking for a <see cref="Option"/>.
+    /// </summary>
+    /// <param name="option">The option to be added.</param>
+    public void AddOption(Option option);
+    
+    /// <summary>
+    /// Begins tracking for a <see cref="OptionField"/>.
+    /// </summary>
+    /// <param name="optionField">The item to add.</param>
+    public void AddOptionField(OptionField optionField);
+    
+    /// <summary>
+    /// Begins tracking for a <see cref="OptionField"/> with the <see cref="EntityState.Deleted"/> state.
+    /// </summary>
+    /// <param name="optionField">The item to delete.</param>
+    public void RemoveOptionField(OptionField optionField);
 }
 
-internal class SingleChoiceFieldRepository(DbSet<SingleChoiceField> singleChoiceFields) : ISingleChoiceFieldRepository
+internal class SingleChoiceFieldRepository(DbSet<SingleChoiceField> singleChoiceFields, DbSet<Option> options, DbSet<OptionField> optionFields) : ISingleChoiceFieldRepository
 {
     private IQueryable<SingleChoiceField> SingleChoiceFields => singleChoiceFields;
     private IQueryable<SingleChoiceField> NoTracking => SingleChoiceFields.AsNoTracking();
@@ -99,5 +117,25 @@ internal class SingleChoiceFieldRepository(DbSet<SingleChoiceField> singleChoice
     public void RemoveSingleChoiceField(SingleChoiceField field)
     {
         singleChoiceFields.Remove(field);
+    }
+
+    public void AddOption(Option option)
+    {
+        options.Add(option);
+    }
+
+    public void RemoveOption(Option option)
+    {
+        options.Remove(option);
+    }
+
+    public void AddOptionField(OptionField optionField)
+    {
+        optionFields.Add(optionField);
+    }
+
+    public void RemoveOptionField(OptionField optionField)
+    {
+        optionFields.Remove(optionField);
     }
 }

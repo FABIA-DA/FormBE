@@ -99,7 +99,7 @@ public class FormServiceTest
             _mockGroupRepository.GetGroupByIdAsync(groupId.Value, false, TestContext.Current.CancellationToken)
                                 .Returns(testGroup);
         }
-
+        
         _mockFieldGroupRepository.GetFieldGroupsByIdsAsync(TestContext.Current.CancellationToken, fieldGroupIds).Returns(fieldGroups);
 
         OneOf<Success<Form>, IFormService.GroupNotFound> result
@@ -161,9 +161,11 @@ public class FormServiceTest
             FieldGroup = g
         }).ToList();
 
+        fieldGroupIds = fieldGroupIds.Skip(2).ToList();
+
         _mockFormRepository.GetFormByIdAsync(testForm.Id, true, TestContext.Current.CancellationToken)
                            .Returns(testForm);
-        _mockFieldGroupRepository.GetFieldGroupsByIdsAsync(TestContext.Current.CancellationToken, fieldGroupIds).Returns(fieldGroups);
+        _mockFieldGroupRepository.GetFieldGroupsByIdsAsync(TestContext.Current.CancellationToken, Arg.Is<List<long>>(ids => ids.SequenceEqual(fieldGroupIds))).Returns(fieldGroups);
 
         if (newGroupId.HasValue)
         {

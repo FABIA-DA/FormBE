@@ -23,7 +23,7 @@ public interface IFieldRepository
     public ValueTask<IReadOnlyCollection<Field>> GetAllFields(CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// Get a subset of existing fields with tracking.
+    /// Get a subset of existing fields with tracking, where invalid ids are ignored.
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <param name="fieldIds">The ids of the fields to get.</param>

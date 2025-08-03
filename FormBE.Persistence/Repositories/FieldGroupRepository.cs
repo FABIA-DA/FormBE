@@ -32,19 +32,43 @@ public interface IFieldGroupRepository
     public ValueTask<IReadOnlyCollection<FieldGroup>> GetFieldGroupsByIdsAsync(CancellationToken cancellationToken = default, params List<long> fieldGroupIds);
 
     /// <summary>
-    /// Adds a new field group, so that it is tracked.
+    /// Adds a new <see cref="FieldGroup"/>, so that it is tracked.
     /// </summary>
     /// <param name="fieldGroup">The field group to add.</param>
     public void AddFieldGroup(FieldGroup fieldGroup);
     
     /// <summary>
-    /// Adds a field group to the tracking with the <see cref="EntityState.Deleted"/> state.
+    /// Begin tracking of a field group with the <see cref="EntityState.Deleted"/> state.
     /// </summary>
     /// <param name="fieldGroup">The field group to delete.</param>
     public void RemoveFieldGroup(FieldGroup fieldGroup);
+    
+    /// <summary>
+    /// Adds a new <see cref="FieldGroupSingleChoiceField"/> to the tracking.
+    /// </summary>
+    /// <param name="fieldGroupSingleChoiceField">The item to add.</param>
+    public void AddFieldGroupSingleChoiceField(FieldGroupSingleChoiceField fieldGroupSingleChoiceField);
+    
+    /// <summary>
+    /// Begins tracking of a <see cref="FieldGroupSingleChoiceField"/> with the <see cref="EntityState.Deleted"/> state.
+    /// </summary>
+    /// <param name="fieldGroupSingleChoiceField">The item to delete.</param>
+    public void RemoveFieldGroupSingleChoiceField(FieldGroupSingleChoiceField fieldGroupSingleChoiceField);
+    
+    /// <summary>
+    /// Adds a new <see cref="FieldGroupField"/> to the tracking.
+    /// </summary>
+    /// <param name="fieldGroupField">The item to add.</param>
+    public void AddFieldGroupField(FieldGroupField fieldGroupField);
+    
+    /// <summary>
+    /// Begins tracking of a <see cref="FieldGroupField"/> with the <see cref="EntityState.Deleted"/> state.
+    /// </summary>
+    /// <param name="fieldGroupField">The item to delete.</param>
+    public void RemoveFieldGroupField(FieldGroupField fieldGroupField);
 }
 
-internal class FieldGroupRepository(DbSet<FieldGroup> fieldGroups) : IFieldGroupRepository
+internal class FieldGroupRepository(DbSet<FieldGroup> fieldGroups, DbSet<FieldGroupSingleChoiceField> fieldGroupSingleChoiceFields, DbSet<FieldGroupField> fieldGroupFields) : IFieldGroupRepository
 {
     private IQueryable<FieldGroup> FieldGroups => fieldGroups;
     private IQueryable<FieldGroup> NoTracking => FieldGroups.AsNoTracking();
@@ -98,5 +122,25 @@ internal class FieldGroupRepository(DbSet<FieldGroup> fieldGroups) : IFieldGroup
     public void RemoveFieldGroup(FieldGroup fieldGroup)
     {
         fieldGroups.Remove(fieldGroup);
+    }
+
+    public void AddFieldGroupSingleChoiceField(FieldGroupSingleChoiceField fieldGroupSingleChoiceField)
+    {
+        fieldGroupSingleChoiceFields.Add(fieldGroupSingleChoiceField);
+    }
+
+    public void RemoveFieldGroupSingleChoiceField(FieldGroupSingleChoiceField fieldGroupSingleChoiceField)
+    {
+        fieldGroupSingleChoiceFields.Remove(fieldGroupSingleChoiceField);
+    }
+
+    public void AddFieldGroupField(FieldGroupField fieldGroupField)
+    {
+        fieldGroupFields.Add(fieldGroupField);
+    }
+
+    public void RemoveFieldGroupField(FieldGroupField fieldGroupField)
+    {
+        fieldGroupFields.Remove(fieldGroupField);
     }
 }

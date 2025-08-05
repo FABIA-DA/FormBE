@@ -20,7 +20,7 @@ public interface IFieldRepository
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>All fields without tracking.</returns>
-    public ValueTask<IReadOnlyCollection<Field>> GetAllFields(CancellationToken cancellationToken = default);
+    public ValueTask<IReadOnlyCollection<Field>> GetFieldsAsync(CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Get a subset of existing fields with tracking, where invalid ids are ignored.
@@ -64,7 +64,7 @@ internal class FieldRepository(DbSet<Field> fields) : IFieldRepository
         return field;
     }
 
-    public async ValueTask<IReadOnlyCollection<Field>> GetAllFields(CancellationToken cancellationToken = default)
+    public async ValueTask<IReadOnlyCollection<Field>> GetFieldsAsync(CancellationToken cancellationToken = default)
     {
         IQueryable<Field> query = NoTracking;
 

@@ -1,7 +1,7 @@
 ﻿using FormBE.Persistence.Model;
 using FormBE.Persistence.Repositories;
 using FormBE.Persistence.Util;
-using Microsoft.Extensions.Options;
+using FormBE.Shared;
 using OneOf.Types;
 using OneOf;
 
@@ -41,11 +41,13 @@ public interface ISingleChoiceFieldService
     /// </summary>
     /// <param name="singleChoiceFieldId">The id of the field to update.</param>
     /// <param name="name">The new name.</param>
-    /// <param name="options">The new options, where invalid field ids are ignored.</param>
+    /// <param name="knownOptions">The known options with their updated values.</param>
+    /// <param name="newOptions">The new options to add.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Success"/> if there were no problems, a <see cref="NotFound"/> if the field was not found. Or a <see cref="OptionNotFound"/> if an option was not found.</returns>
-    public ValueTask<OneOf<Success, NotFound, OptionNotFound>> UpdateSingleChoiceFieldAsync(
-        long singleChoiceFieldId, string name, List<(long Id, string Name, List<long> FieldIds)> options,
+    /// <returns>A <see cref="Success"/> if there were no problems or a <see cref="NotFound"/> if the field was not found.</returns>
+    public ValueTask<OneOf<Success, NotFound>> UpdateSingleChoiceFieldAsync(
+        long singleChoiceFieldId, string name, List<(long Id, string Name, List<long> FieldIds)> knownOptions,
+        List<(string Name, List<long> FieldIds)> newOptions,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -56,8 +58,6 @@ public interface ISingleChoiceFieldService
     /// <returns>A <see cref="Success"/> or a <see cref="NotFound"/> if the field was not found.</returns>
     public ValueTask<OneOf<Success, NotFound>> DeleteSingleChoiceFieldAsync(
         long singleChoiceFieldId, CancellationToken cancellationToken = default);
-
-    public struct OptionNotFound;
 }
 
 internal class SingleChoiceFieldService(
@@ -66,14 +66,6 @@ internal class SingleChoiceFieldService(
     IUnitOfWork uow,
     ILogger<SingleChoiceFieldService> logger) : ISingleChoiceFieldService
 {
-    public void Dummy()
-    {
-        var a = singleChoiceFieldRepository;
-        var b = uow;
-        var c = logger;
-        var e = fieldRepository;
-    }
-
     public async ValueTask<IReadOnlyCollection<SingleChoiceField>> GetSingleChoiceFieldsAsync(
         CancellationToken cancellationToken = default) =>
         await singleChoiceFieldRepository.GetSingleChoiceFieldsAsync(cancellationToken);
@@ -81,11 +73,14 @@ internal class SingleChoiceFieldService(
     public async ValueTask<OneOf<SingleChoiceField, NotFound>> GetSingleChoiceFieldByIdAsync(
         long singleChoiceFieldId, CancellationToken cancellationToken = default)
     {
-        SingleChoiceField? singleChoiceField = await singleChoiceFieldRepository.GetSingleChoiceFieldByIdAsync(singleChoiceFieldId, false, cancellationToken);
+        SingleChoiceField? singleChoiceField
+            = await singleChoiceFieldRepository.GetSingleChoiceFieldByIdAsync(singleChoiceFieldId, false,
+                                                                              cancellationToken);
 
         if (singleChoiceField == null)
         {
-            logger.LogInformation("Tried to get single choice field with id {SingleChoiceFieldId}, but was not found", singleChoiceFieldId);
+            logger.LogInformation("Tried to get single choice field with id {SingleChoiceFieldId}, but was not found",
+                                  singleChoiceFieldId);
 
             return new NotFound();
         }
@@ -107,21 +102,21 @@ internal class SingleChoiceFieldService(
         List<Option> realOptions = [];
 
         List<long> fieldIds = options.SelectMany(o => o.FieldIds).ToList();
-        
+
         IReadOnlyCollection<Field> fields = await fieldRepository.GetFieldsByIdsAsync(cancellationToken, fieldIds);
         List<List<Field>> orderedFields = [];
         int k = 0;
-        
+
         for (int i = 0; i < options.Count; i++)
         {
             orderedFields.Add([]);
             for (int j = 0; j < options[i].FieldIds.Count; j++)
             {
                 if (fields.ElementAtOrDefault(k) != null
-                && options[i].FieldIds[j] == fields.ElementAtOrDefault(k)?.Id)
+                    && options[i].FieldIds[j] == fields.ElementAtOrDefault(k)?.Id)
                 {
                     orderedFields[i].Add(fields.ElementAt(k));
-                    k++;   
+                    k++;
                 }
             }
         }
@@ -146,28 +141,133 @@ internal class SingleChoiceFieldService(
             {
                 singleChoiceFieldRepository.AddOptionField(optionField);
             }
-            
+
             option.OptionFields = optionFields;
 
             singleChoiceFieldRepository.AddOption(option);
-            
+
             realOptions.Add(option);
         }
 
         field.Options = realOptions;
-        
+
         singleChoiceFieldRepository.AddSingleChoiceField(field);
         logger.LogInformation("Created single choice field with id {SingleChoiceFieldId}", field.Id);
 
         return field;
     }
 
-    public ValueTask<OneOf<Success, NotFound, ISingleChoiceFieldService.OptionNotFound>> UpdateSingleChoiceFieldAsync(
-        long singleChoiceFieldId, string name, List<(long Id, string Name, List<long> FieldIds)> options,
-        CancellationToken cancellationToken = default) =>
-        throw new NotImplementedException();
+    public async ValueTask<OneOf<Success, NotFound>> UpdateSingleChoiceFieldAsync(
+        long singleChoiceFieldId, string name, List<(long Id, string Name, List<long> FieldIds)> knownOptions,
+        List<(string Name, List<long> FieldIds)> newOptions,
+        CancellationToken cancellationToken = default)
+    {
+        SingleChoiceField? singleChoiceField
+            = await singleChoiceFieldRepository.GetSingleChoiceFieldByIdAsync(singleChoiceFieldId, true,
+                                                                              cancellationToken);
 
-    public ValueTask<OneOf<Success, NotFound>> DeleteSingleChoiceFieldAsync(
-        long singleChoiceFieldId, CancellationToken cancellationToken = default) =>
-        throw new NotImplementedException();
+        if (singleChoiceField == null)
+        {
+            logger.LogInformation("Tried to update single choice field by id {SingleChoiceFieldId}, but was not found",
+                                  singleChoiceFieldId);
+
+            return new NotFound();
+        }
+
+        if (singleChoiceField.Name != name)
+        {
+            singleChoiceField.Name = name;
+        }
+
+        List<long> optionIds = knownOptions.Select(o => o.Id).ToList();
+
+        if (!singleChoiceField.Options.IdsEqual(optionIds, o => o.Id))
+        {
+            (List<long> newIds, List<Option> stillOptions, List<Option> oldOptions)
+                = singleChoiceField.Options.SeparateItemsById(optionIds, o => o.Id);
+
+            foreach (var option in oldOptions)
+            {
+                foreach (var optionField in option.OptionFields)
+                {
+                    singleChoiceFieldRepository.RemoveOptionField(optionField);
+                }
+
+                singleChoiceFieldRepository.RemoveOption(option);
+            }
+
+            singleChoiceField.Options = stillOptions;
+        }
+
+        List<Option> realNewOptions = [];
+        
+        if (newOptions.Count > 0)
+        {
+            List<long> fieldIds = newOptions.SelectMany(o => o.FieldIds).ToList();
+
+            IReadOnlyCollection<Field> fields = await fieldRepository.GetFieldsByIdsAsync(cancellationToken, fieldIds);
+            int k = 0;
+            
+            for (var i = 0; i < newOptions.Count; i++)
+            {
+                (string newName, List<long> newFieldIds) = newOptions[i];
+                Option option = new()
+                {
+                    Name = newName,
+                    OptionFields = [],
+                    SingleChoiceField = singleChoiceField,
+                    OptionResponses = []
+                };
+                
+                List<Field> newFields = [];
+                for (int j = 0; j < newOptions[i].FieldIds.Count; j++)
+                {
+                    Field? field = fields.ElementAtOrDefault(k);
+                    if (field != null
+                        && newFieldIds[j] == field.Id)
+                    {
+                        newFields.Add(field);
+                        k++;
+                    }
+                }
+
+                foreach (var optionFields in newFields.Select(f => new OptionField()
+                         {
+                             Option = option,
+                             Field = f
+                         }))
+                {
+                    singleChoiceFieldRepository.AddOptionField(optionFields);
+                    option.OptionFields.Add(optionFields);
+                }
+                
+                singleChoiceFieldRepository.AddOption(option);
+                singleChoiceField.Options.Add(option);
+            }
+        }
+
+        await uow.SaveChangesAsync(cancellationToken);
+        logger.LogInformation("Updated a single choice field with id {SingleChoiceFieldId}", singleChoiceField.Id);
+        
+        return new Success();
+    }
+
+    public async ValueTask<OneOf<Success, NotFound>> DeleteSingleChoiceFieldAsync(
+        long singleChoiceFieldId, CancellationToken cancellationToken = default)
+    {
+        SingleChoiceField? field = await singleChoiceFieldRepository.GetSingleChoiceFieldByIdAsync(singleChoiceFieldId, true, cancellationToken);
+
+        if (field == null)
+        {
+            logger.LogInformation("Tried to delete single choice field with id {SingleChoiceFieldId}, but was not found", singleChoiceFieldId);
+
+            return new NotFound();
+        }
+        
+        singleChoiceFieldRepository.RemoveSingleChoiceField(field);
+        await uow.SaveChangesAsync(cancellationToken);
+        logger.LogInformation("Deleted single choice field with id {SingleChoiceFieldId}", field.Id);
+
+        return new Success();
+    }
 }

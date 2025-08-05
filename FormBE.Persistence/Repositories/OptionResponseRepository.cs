@@ -15,6 +15,15 @@ public interface IOptionResponseRepository
     public ValueTask<OptionResponse?> GetOptionResponseByIdAsync(long optionResponseId, bool tracking = true, CancellationToken cancellationToken = default);
     
     /// <summary>
+    /// Get a <see cref="Option"/> by its id.
+    /// </summary>
+    /// <param name="optionId">The id of the option to add.</param>
+    /// <param name="tracking">If EF Core should track the entity.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>The <see cref="Option"/> or null if not found.</returns>
+    public ValueTask<Option?> GetOptionByIdAsync(long optionId, bool tracking = true, CancellationToken cancellationToken = default);
+    
+    /// <summary>
     /// Get all option responses.
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
@@ -34,7 +43,7 @@ public interface IOptionResponseRepository
     public void RemoveOptionResponse(OptionResponse optionResponse);
 }
 
-internal class OptionResponseRepository(DbSet<OptionResponse> optionResponses) : IOptionResponseRepository
+internal class OptionResponseRepository(DbSet<OptionResponse> optionResponses, DbSet<Option> options) : IOptionResponseRepository
 {
     private IQueryable<OptionResponse> OptionResponses => optionResponses;
     private IQueryable<OptionResponse> NoTracking => OptionResponses.AsNoTracking();
@@ -54,6 +63,19 @@ internal class OptionResponseRepository(DbSet<OptionResponse> optionResponses) :
                                               .FirstOrDefaultAsync(or => or.Id == optionResponseId, cancellationToken);
 
         return optionResponse;
+    }
+
+    public async ValueTask<Option?> GetOptionByIdAsync(long optionId, bool tracking = true, CancellationToken cancellationToken = default)
+    {
+        IQueryable<Option> query = options;
+
+        if (!tracking)
+        {
+            query = options.AsNoTracking();
+        }
+        
+        Option? option = await query.FirstOrDefaultAsync(o => o.Id == optionId, cancellationToken);
+        return option;
     }
 
     public async ValueTask<IReadOnlyCollection<OptionResponse>> GetOptionResponsesAsync(CancellationToken cancellationToken = default)

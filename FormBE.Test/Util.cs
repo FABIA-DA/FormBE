@@ -226,6 +226,227 @@ public static class Util
         (3, "Option 4", [2, 4])
     ];
 
+    public static List<OptionResponse> GetTestOptionResponses() => [
+        new()
+        {
+            Id = 0,
+            TelephoneNumber = "0000",
+            SubmittedAt = Instant.FromUtc(2025, 8, 4, 0, 0),
+            Option = new()
+            {
+                Id = 0,
+                Name = "Option 1",
+                SingleChoiceField = new()
+                {
+                    Id = 0,
+                    Name = "Single Choice Field 1",
+                    FieldGroupSingleChoiceFields = [],
+                    Options = []
+                },
+                OptionFields = [],
+                OptionResponses = []
+            }
+        },
+        new()
+        {
+            Id = 1,
+            TelephoneNumber = "0001",
+            SubmittedAt = Instant.FromUtc(2025, 8, 4, 1, 0),
+            Option = new()
+            {
+                Id = 0,
+                Name = "Option 1",
+                SingleChoiceField = new()
+                {
+                    Id = 0,
+                    Name = "Single Choice Field 1",
+                    FieldGroupSingleChoiceFields = [],
+                    Options = []
+                },
+                OptionFields = [],
+                OptionResponses = []
+            }
+        },
+        new()
+        {
+            Id = 2,
+            TelephoneNumber = "0002",
+            SubmittedAt = Instant.FromUtc(2025, 8, 4, 2, 0),
+            Option = new()
+            {
+                Id = 0,
+                Name = "Option 1",
+                SingleChoiceField = new()
+                {
+                    Id = 0,
+                    Name = "Single Choice Field 1",
+                    FieldGroupSingleChoiceFields = [],
+                    Options = []
+                },
+                OptionFields = [],
+                OptionResponses = []
+            }
+        },
+        new()
+        {
+            Id = 3,
+            TelephoneNumber = "0003",
+            SubmittedAt = Instant.FromUtc(2025, 8, 4, 3, 0),
+            Option = new()
+            {
+                Id = 0,
+                Name = "Option 1",
+                SingleChoiceField = new()
+                {
+                    Id = 0,
+                    Name = "Single Choice Field 1",
+                    FieldGroupSingleChoiceFields = [],
+                    Options = []
+                },
+                OptionFields = [],
+                OptionResponses = []
+            }
+        },
+    ];
+
+    public static List<FieldType> GetTestFieldTypes() => [
+        new()
+        {
+            Id = 0,
+            Name = "Number",
+            Description = null,
+            Regex = "\\d+",
+            Fields = []
+        },
+        new()
+        {
+            Id = 1,
+            Name = "String",
+            Description = null,
+            Regex = "\\w+",
+            Fields = []
+        },
+        new()
+        {
+            Id = 2,
+            Name = "Postal Code",
+            Description = null,
+            Regex = "\\d{4}",
+            Fields = []
+        },
+        new()
+        {
+            Id = 3,
+            Name = "EAN-13",
+            Description = null,
+            Regex = "\\d{13}",
+            Fields = []
+        }
+    ];
+
+    public static List<FieldResponse> GetTestFieldResponses() => [
+        new()
+        {
+            Id = 0,
+            TelephoneNumber = "0000",
+            Value = "test",
+            SubmittedAt = Instant.FromUtc(2025, 8, 4, 0, 0),
+            Field = new()
+            {
+                Id = 0,
+                Name = "Input",
+                Description =null,
+                IsOptional = false,
+                FieldGroupFields = [],
+                FieldResponses = [],
+                OptionFields = [],
+                FieldType = new()
+                {
+                    Id = 0,
+                    Name = "Text",
+                    Description = null,
+                    Regex = "\\w+",
+                    Fields = []
+                }
+            }
+        },
+        new()
+        {
+            Id = 1,
+            TelephoneNumber = "0001",
+            Value = "test",
+            SubmittedAt = Instant.FromUtc(2025, 8, 4, 0, 0),
+            Field = new()
+            {
+                Id = 0,
+                Name = "Input",
+                Description =null,
+                IsOptional = false,
+                FieldGroupFields = [],
+                FieldResponses = [],
+                OptionFields = [],
+                FieldType = new()
+                {
+                    Id = 0,
+                    Name = "Text",
+                    Description = null,
+                    Regex = "\\w+",
+                    Fields = []
+                }
+            }
+        },
+        new()
+        {
+            Id = 2,
+            TelephoneNumber = "0002",
+            Value = "test",
+            SubmittedAt = Instant.FromUtc(2025, 8, 4, 0, 0),
+            Field = new()
+            {
+                Id = 0,
+                Name = "Input",
+                Description =null,
+                IsOptional = false,
+                FieldGroupFields = [],
+                FieldResponses = [],
+                OptionFields = [],
+                FieldType = new()
+                {
+                    Id = 0,
+                    Name = "Text",
+                    Description = null,
+                    Regex = "\\w+",
+                    Fields = []
+                }
+            }
+        },
+        new()
+        {
+            Id = 3,
+            TelephoneNumber = "0003",
+            Value = "test",
+            SubmittedAt = Instant.FromUtc(2025, 8, 4, 0, 0),
+            Field = new()
+            {
+                Id = 0,
+                Name = "Input",
+                Description =null,
+                IsOptional = false,
+                FieldGroupFields = [],
+                FieldResponses = [],
+                OptionFields = [],
+                FieldType = new()
+                {
+                    Id = 0,
+                    Name = "Text",
+                    Description = null,
+                    Regex = "\\w+",
+                    Fields = []
+                }
+            }
+        },
+    ];
+    
     public static List<long> GetIds(this IEnumerable<Group> coll) => coll.Select(i => i.Id).ToList();
     public static List<long> GetIds(this IEnumerable<Form> coll) => coll.Select(i => i.Id).ToList();
     public static List<long> GetIds(this IEnumerable<FieldGroup> coll) => coll.Select(i => i.Id).ToList();

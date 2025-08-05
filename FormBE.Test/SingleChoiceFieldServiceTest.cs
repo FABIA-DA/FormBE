@@ -94,7 +94,7 @@ public class SingleChoiceFieldServiceTest
                                                       .Where(f => f != null)
                                                       .OfType<Field>()
                                                       .ToList())
-                            .ToList();
+                                    .ToList();
         List<long> flatFieldIds = options.SelectMany(o => o.FieldIds).ToList();
 
         SingleChoiceField field = new()
@@ -105,7 +105,9 @@ public class SingleChoiceFieldServiceTest
             Options = []
         };
 
-        _mockFieldRepository.GetFieldsByIdsAsync(TestContext.Current.CancellationToken, Arg.Is<List<long>>(list => list.SequenceEqual(flatFieldIds))).Returns(fields);
+        _mockFieldRepository.GetFieldsByIdsAsync(TestContext.Current.CancellationToken,
+                                                 Arg.Is<List<long>>(list => list.SequenceEqual(flatFieldIds)))
+                            .Returns(fields);
 
         SingleChoiceField result
             = await _singleChoiceFieldService.CreateSingleChoiceFieldAsync(field.Name, options,
@@ -115,9 +117,141 @@ public class SingleChoiceFieldServiceTest
         result.Options.Count.Should().Be(options.Count);
     }
 
-    // [Fact]
-    // public async Task UpdateSingleChoiceFieldAsync_Success()
-    // {
-    //     _mockSingleChoiceFieldRepository.GetSingleChoiceFieldByIdAsync()
-    // }
+    [Fact]
+    public async Task UpdateSingleChoiceFieldAsync_Success()
+    {
+        const string NewName = "1.Field";
+        List<(long Id, string Name, List<long> FieldIds)> passedOptions = Util.GetTestOptions();
+        SingleChoiceField field = new()
+        {
+            Id = 0,
+            Name = "Field 1",
+            FieldGroupSingleChoiceFields = [],
+            Options = []
+        };
+        List<Option> options = Util.GetTestOptions().Select(o => new Option()
+        {
+            SingleChoiceField = field,
+            Name = o.Name,
+            OptionFields = [],
+            OptionResponses = []
+        }).ToList();
+        List<List<Field>> usedFields = Util.GetTestOptions().Select(o => o.FieldIds)
+                                           .Select(list => list.Select(id => Util.GetTestFields().Find(f => f.Id == id))
+                                                               .Where(f => f != null)
+                                                               .OfType<Field>()
+                                                               .ToList())
+                                           .ToList();
+        for (int i = 0; i < options.Count; i++)
+        {
+            options[i].OptionFields = usedFields[i].Select(f => new OptionField()
+            {
+                Option = options[i],
+                Field = f
+            }).ToList();
+        }
+
+        field.Options = options.Take(2).ToList();
+
+        options = options.Skip(2).ToList();
+
+        passedOptions = passedOptions.Skip(2).ToList();
+
+        List<Field> fields = passedOptions.SelectMany(o => o.FieldIds
+                                                            .Select(id => Util.GetTestFields().Find(f => f.Id == id))
+                                                            .Where(f => f != null)
+                                                            .OfType<Field>()
+                                                            .ToList())
+                                          .ToList();
+        List<long> flatFieldIds = passedOptions.SelectMany(o => o.FieldIds)
+                                               .ToList();
+
+        _mockSingleChoiceFieldRepository
+            .GetSingleChoiceFieldByIdAsync(field.Id, true, TestContext.Current.CancellationToken).Returns(field);
+
+        _mockSingleChoiceFieldRepository.GetOptionsByIdsAsync(TestContext.Current.CancellationToken,
+                                                              Arg.Is<List<long>>(list =>
+                                                                  list.SequenceEqual(options.Select(o => o.Id))))
+                                        .Returns(options);
+        _mockFieldRepository.GetFieldsByIdsAsync(TestContext.Current.CancellationToken,
+                                                 Arg.Is<List<long>>(list => list.SequenceEqual(flatFieldIds)))
+                            .Returns(fields);
+
+        OneOf<Success, NotFound> result
+            = await _singleChoiceFieldService.UpdateSingleChoiceFieldAsync(field.Id, NewName, passedOptions,
+                                                                           passedOptions
+                                                                               .Select(o => (o.Name, o.FieldIds))
+                                                                               .ToList()
+                                                                           , TestContext.Current.CancellationToken);
+
+        result.Switch(success =>
+                      {
+                          // expected
+                      },
+                      notFound => result.Should().NotBeOfType<NotFound>("should be found"));
+    }
+
+    [Fact]
+    public async Task UpdateSingleChoiceFieldAsync_NotFound()
+    {
+        const long FieldId = 0;
+        List<(long Id, string Name, List<long> FieldIds)> passedOptions = Util.GetTestOptions();
+
+        _mockSingleChoiceFieldRepository
+            .GetSingleChoiceFieldByIdAsync(FieldId, true, TestContext.Current.CancellationToken)
+            .Returns((SingleChoiceField?) null);
+
+        OneOf<Success, NotFound> result
+            = await _singleChoiceFieldService.UpdateSingleChoiceFieldAsync(FieldId, "NotFound", passedOptions, [],
+                                                                           TestContext.Current.CancellationToken);
+
+        result.Switch(success => result.Should().NotBeOfType<Success>("should not be found"),
+                      notFound =>
+                      {
+                          // expected
+                      });
+    }
+
+    [Fact]
+    public async Task DeleteSingleChoiceFieldAsync_Success()
+    {
+        SingleChoiceField field = new()
+        {
+            Id = 0,
+            Name = "Field 1",
+            FieldGroupSingleChoiceFields = [],
+            Options = []
+        };
+
+        _mockSingleChoiceFieldRepository
+            .GetSingleChoiceFieldByIdAsync(field.Id, true, TestContext.Current.CancellationToken).Returns(field);
+
+        OneOf<Success, NotFound> result
+            = await _singleChoiceFieldService.DeleteSingleChoiceFieldAsync(field.Id,
+                                                                           TestContext.Current.CancellationToken);
+
+        result.Switch(success =>
+                      {
+                          // expected
+                      },
+                      notFound => result.Should().NotBeOfType<NotFound>("should be found"));
+    }
+
+    [Fact]
+    public async Task DeleteSingleChoiceFieldAsync_NotFound()
+    {
+        const long FieldId = 0;
+        
+        _mockSingleChoiceFieldRepository.GetSingleChoiceFieldByIdAsync(FieldId, true, TestContext.Current.CancellationToken).Returns((SingleChoiceField?) null);
+        
+        OneOf<Success, NotFound> result
+            = await _singleChoiceFieldService.DeleteSingleChoiceFieldAsync(FieldId,
+                                                                           TestContext.Current.CancellationToken);
+
+        result.Switch(success => result.Should().NotBeOfType<Success>("should not be found"),
+                      notFound =>
+                      {
+                          // expected
+                      });
+    }
 }

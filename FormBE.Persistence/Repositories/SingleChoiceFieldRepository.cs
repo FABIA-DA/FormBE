@@ -44,10 +44,25 @@ public interface ISingleChoiceFieldRepository
     public void RemoveSingleChoiceField(SingleChoiceField field);
 
     /// <summary>
+    /// Get <see cref="Option"/>s by their ids with tracking while invalid optionIds are ignored.
+    /// </summary>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <param name="optionIds">The ids of the options to get.</param>
+    /// <returns>A <see cref="IReadOnlyCollection{Option}"/> of <see cref="Option"/>s.</returns>
+    public ValueTask<IReadOnlyCollection<Option>> GetOptionsByIdsAsync(CancellationToken cancellationToken = default, params List<long> optionIds);
+    
+    /// <summary>
     /// Begins tracking for a <see cref="Option"/>.
     /// </summary>
     /// <param name="option">The option to be added.</param>
     public void AddOption(Option option);
+
+    
+    /// <summary>
+    /// Begins to track for a <see cref="Option"/> with the <see cref="EntityState.Deleted"/> state.
+    /// </summary>
+    /// <param name="option">The option to delete.</param>
+    public void RemoveOption(Option option);
     
     /// <summary>
     /// Begins tracking for a <see cref="OptionField"/>.
@@ -79,6 +94,7 @@ internal class SingleChoiceFieldRepository(DbSet<SingleChoiceField> singleChoice
         }
 
         SingleChoiceField? field = await query.Include(f => f.Options)
+                                              .ThenInclude(o => o.OptionFields)
                                               .FirstOrDefaultAsync(f => f.Id == singleChoiceFieldId, cancellationToken);
 
         return field;
@@ -117,6 +133,22 @@ internal class SingleChoiceFieldRepository(DbSet<SingleChoiceField> singleChoice
     public void RemoveSingleChoiceField(SingleChoiceField field)
     {
         singleChoiceFields.Remove(field);
+    }
+
+    public async ValueTask<IReadOnlyCollection<Option>> GetOptionsByIdsAsync(CancellationToken cancellationToken = default, params List<long> optionIds)
+    {
+        if (optionIds.Count == 0)
+        {
+            return [];
+        }
+
+        IQueryable<Option> query = options
+                                   .Include(o => o.OptionFields)
+                                   .Where(o => optionIds.Contains(o.Id));
+        
+        IReadOnlyCollection<Option> coll = await query.ToListAsync(cancellationToken);
+
+        return coll;
     }
 
     public void AddOption(Option option)

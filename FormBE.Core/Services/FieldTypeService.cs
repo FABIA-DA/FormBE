@@ -53,13 +53,15 @@ public interface IFieldTypeService
     public ValueTask<OneOf<Success, NotFound>> DeleteFieldTypeAsync(long fieldTypeId, CancellationToken cancellationToken = default);
 }
 
-internal class FieldTypeService(IFieldTypeRepository fieldTypeRepository, IUnitOfWork uow, ILogger<FieldTypeService> logger) : IFieldTypeService
+internal class FieldTypeService(IUnitOfWork uow, ILogger<FieldTypeService> logger) : IFieldTypeService
 {
-    public async ValueTask<IReadOnlyCollection<FieldType>> GetFieldTypesAsync(CancellationToken cancellationToken = default) => await fieldTypeRepository.GetAllFieldTypes(cancellationToken);
+    private IFieldTypeRepository FieldTypeRepository => uow.FieldTypeRepository;
+    
+    public async ValueTask<IReadOnlyCollection<FieldType>> GetFieldTypesAsync(CancellationToken cancellationToken = default) => await FieldTypeRepository.GetAllFieldTypes(cancellationToken);
 
     public async ValueTask<OneOf<FieldType, NotFound>> GetFieldTypeByIdAsync(long fieldTypeId, CancellationToken cancellationToken = default)
     {
-        FieldType? fieldType = await fieldTypeRepository.GetFieldTypeByIdAsync(fieldTypeId, false, cancellationToken);
+        FieldType? fieldType = await FieldTypeRepository.GetFieldTypeByIdAsync(fieldTypeId, false, cancellationToken);
 
         if (fieldType == null)
         {
@@ -82,7 +84,7 @@ internal class FieldTypeService(IFieldTypeRepository fieldTypeRepository, IUnitO
             Fields = []
         };
         
-        fieldTypeRepository.AddFieldType(type);
+        FieldTypeRepository.AddFieldType(type);
         await uow.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Created field type with id {FieldTypeId}", type.Id);
 
@@ -92,7 +94,7 @@ internal class FieldTypeService(IFieldTypeRepository fieldTypeRepository, IUnitO
     public async ValueTask<OneOf<Success, NotFound>> UpdateFieldTypeAsync(long fieldTypeId, string name, string? description, string regex,
                                                                     CancellationToken cancellationToken = default)
     {
-        FieldType? type = await fieldTypeRepository.GetFieldTypeByIdAsync(fieldTypeId, true, cancellationToken);
+        FieldType? type = await FieldTypeRepository.GetFieldTypeByIdAsync(fieldTypeId, true, cancellationToken);
 
         if (type == null)
         {
@@ -123,7 +125,7 @@ internal class FieldTypeService(IFieldTypeRepository fieldTypeRepository, IUnitO
 
     public async ValueTask<OneOf<Success, NotFound>> DeleteFieldTypeAsync(long fieldTypeId, CancellationToken cancellationToken = default)
     {
-        FieldType? type = await fieldTypeRepository.GetFieldTypeByIdAsync(fieldTypeId, true, cancellationToken);
+        FieldType? type = await FieldTypeRepository.GetFieldTypeByIdAsync(fieldTypeId, true, cancellationToken);
 
         if (type == null)
         {
@@ -131,7 +133,7 @@ internal class FieldTypeService(IFieldTypeRepository fieldTypeRepository, IUnitO
             return new NotFound();
         }
         
-        fieldTypeRepository.RemoveFieldType(type);
+        FieldTypeRepository.RemoveFieldType(type);
         await uow.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Deleted field type with id {FieldTypeId}", fieldTypeId);
 

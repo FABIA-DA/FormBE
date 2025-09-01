@@ -18,9 +18,10 @@ public class OptionResponseServiceTest
     {
         _mockOptionResponseRepository = Substitute.For<IOptionResponseRepository>();
         IUnitOfWork uow = Substitute.For<IUnitOfWork>();
+        uow.OptionResponseRepository.Returns(_mockOptionResponseRepository);
         _mockClock = Substitute.For<IClock>();
         ILogger<OptionResponseService> logger = Substitute.For<ILogger<OptionResponseService>>();
-        _optionResponseService = new OptionResponseService(_mockOptionResponseRepository, uow, _mockClock, logger);
+        _optionResponseService = new OptionResponseService(uow, _mockClock, logger);
     }
 
     [Fact]

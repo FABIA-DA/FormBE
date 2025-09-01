@@ -82,7 +82,8 @@ internal class FieldRepository(DbSet<Field> fields) : IFieldRepository
         
         IQueryable<Field> query = Fields.Where(f => fieldIds.Contains(f.Id));
         
-        IReadOnlyCollection<Field> coll = await query.ToListAsync(cancellationToken);
+        IReadOnlyCollection<Field> coll = await query.Include(f => f.FieldType)
+                                                     .ToListAsync(cancellationToken);
         
         return coll;
     }

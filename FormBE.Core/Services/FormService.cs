@@ -62,19 +62,20 @@ public interface IFormService
 }
 
 internal class FormService(
-    IFormRepository formRepository,
-    IGroupRepository groupRepository,
-    IFieldGroupRepository fieldGroupRepository,
     IUnitOfWork uow,
     ILogger<FormService> logger) : IFormService
 {
+    private IFormRepository FormRepository => uow.FormRepository;
+    private IGroupRepository GroupRepository => uow.GroupRepository;
+    private IFieldGroupRepository FieldGroupRepository => uow.FieldGroupRepository;
+    
     public async ValueTask<IReadOnlyCollection<Form>> GetFormsAsync(CancellationToken cancellationToken = default) =>
-        await formRepository.GetFormsAsync(cancellationToken);
+        await FormRepository.GetFormsAsync(cancellationToken);
 
     public async ValueTask<OneOf<Form, NotFound>> GetFormByIdAsync(long formId,
                                                                    CancellationToken cancellationToken = default)
     {
-        Form? form = await formRepository.GetFormByIdAsync(formId, false, cancellationToken);
+        Form? form = await FormRepository.GetFormByIdAsync(formId, false, cancellationToken);
 
         if (form == null)
         {
@@ -98,7 +99,7 @@ internal class FormService(
 
         if (groupId.HasValue)
         {
-            Group? group = await groupRepository.GetGroupByIdAsync(groupId.Value, false, cancellationToken);
+            Group? group = await GroupRepository.GetGroupByIdAsync(groupId.Value, false, cancellationToken);
 
             if (group == null)
             {
@@ -109,7 +110,7 @@ internal class FormService(
         }
 
         IReadOnlyCollection<FieldGroup> fieldGroups
-            = await fieldGroupRepository.GetFieldGroupsByIdsAsync(cancellationToken, fieldGroupIds);
+            = await FieldGroupRepository.GetFieldGroupsByIdsAsync(cancellationToken, fieldGroupIds);
 
         form.FormFieldGroups = fieldGroups.Select(g => new FormFieldGroup()
         {
@@ -117,7 +118,7 @@ internal class FormService(
             FieldGroup = g
         }).ToList();
 
-        formRepository.AddForm(form);
+        FormRepository.AddForm(form);
         await uow.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Created form with id {FormId}", form.Id);
 
@@ -128,7 +129,7 @@ internal class FormService(
         long formId, long? groupId, string name, List<long> fieldGroupIds,
         CancellationToken cancellationToken = default)
     {
-        Form? form = await formRepository.GetFormByIdAsync(formId, true, cancellationToken);
+        Form? form = await FormRepository.GetFormByIdAsync(formId, true, cancellationToken);
 
         if (form == null)
         {
@@ -140,7 +141,7 @@ internal class FormService(
         if (groupId.HasValue &&
             form.GroupId != groupId.Value)
         {
-            Group? group = await groupRepository.GetGroupByIdAsync(groupId.Value, false, cancellationToken);
+            Group? group = await GroupRepository.GetGroupByIdAsync(groupId.Value, false, cancellationToken);
 
             if (group == null)
             {
@@ -165,11 +166,11 @@ internal class FormService(
 
             foreach (FormFieldGroup ffg in oldItems)
             {
-                formRepository.RemoveFormFieldGroup(ffg);
+                FormRepository.RemoveFormFieldGroup(ffg);
             }
 
             IReadOnlyCollection<FormFieldGroup> newFormFieldGroups
-                = (await fieldGroupRepository.GetFieldGroupsByIdsAsync(cancellationToken, newIds))
+                = (await FieldGroupRepository.GetFieldGroupsByIdsAsync(cancellationToken, newIds))
                   .Select(fg => new FormFieldGroup()
                   {
                       Form = form,
@@ -178,7 +179,7 @@ internal class FormService(
 
             foreach (FormFieldGroup ffg in newFormFieldGroups)
             {
-                formRepository.AddFormFieldGroup(ffg);
+                FormRepository.AddFormFieldGroup(ffg);
             }
             
             form.FormFieldGroups = stillItems.Concat(newFormFieldGroups).ToList();
@@ -193,7 +194,7 @@ internal class FormService(
     public async ValueTask<OneOf<Success, NotFound>> DeleteFormAsync(long formId,
                                                                      CancellationToken cancellationToken = default)
     {
-        Form? form = await formRepository.GetFormByIdAsync(formId, true, cancellationToken);
+        Form? form = await FormRepository.GetFormByIdAsync(formId, true, cancellationToken);
 
         if (form == null)
         {
@@ -202,7 +203,7 @@ internal class FormService(
             return new NotFound();
         }
 
-        formRepository.RemoveForm(form);
+        FormRepository.RemoveForm(form);
         await uow.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Deleted form with id {FormId}", formId);
 

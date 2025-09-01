@@ -21,9 +21,11 @@ public class FieldResponseServiceTest
         _mockFieldRepository = Substitute.For<IFieldRepository>();
         _mockClock = Substitute.For<IClock>();
         IUnitOfWork uow = Substitute.For<IUnitOfWork>();
+        uow.FieldResponseRepository.Returns(_mockFieldResponseRepository);
+        uow.FieldRepository.Returns(_mockFieldRepository);
         ILogger<FieldResponseService> logger = Substitute.For<ILogger<FieldResponseService>>();
         _fieldResponseService
-            = new FieldResponseService(_mockFieldResponseRepository, _mockFieldRepository, uow, _mockClock, logger);
+            = new FieldResponseService(uow, _mockClock, logger);
     }
 
     [Fact]

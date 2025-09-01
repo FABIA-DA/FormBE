@@ -49,7 +49,8 @@ internal class FieldResponseRepository(DbSet<FieldResponse> fieldResponses) : IF
             query = NoTracking;
         }
         
-        FieldResponse? response = await query.FirstOrDefaultAsync(r => r.Id == fieldResponseId, cancellationToken);
+        FieldResponse? response = await query.Include(fr => fr.Field)
+                                             .FirstOrDefaultAsync(r => r.Id == fieldResponseId, cancellationToken);
         return response;
     }
 

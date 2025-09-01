@@ -19,9 +19,12 @@ public class SingleChoiceFieldServiceTest
         _mockSingleChoiceFieldRepository = Substitute.For<ISingleChoiceFieldRepository>();
         _mockFieldRepository = Substitute.For<IFieldRepository>();
         IUnitOfWork uow = Substitute.For<IUnitOfWork>();
+        uow.SingleChoiceFieldRepository.Returns(_mockSingleChoiceFieldRepository);
+        uow.FieldRepository.Returns(_mockFieldRepository);
+        uow.SingleChoiceFieldRepository.Returns(_mockSingleChoiceFieldRepository);
         ILogger<SingleChoiceFieldService> logger = Substitute.For<ILogger<SingleChoiceFieldService>>();
         _singleChoiceFieldService
-            = new SingleChoiceFieldService(_mockSingleChoiceFieldRepository, _mockFieldRepository, uow, logger);
+            = new SingleChoiceFieldService(uow, logger);
     }
 
     [Fact]

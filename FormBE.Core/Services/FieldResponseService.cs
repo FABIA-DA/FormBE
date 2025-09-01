@@ -45,17 +45,18 @@ public interface IFieldResponseService
 }
 
 internal class FieldResponseService(
-    IFieldResponseRepository fieldResponseRepository,
-    IFieldRepository fieldRepository,
     IUnitOfWork uow,
     IClock clock,
     ILogger<FieldResponseService> logger) : IFieldResponseService
 {
-    public async ValueTask<IReadOnlyCollection<FieldResponse>> GetAllFieldResponsesAsync(CancellationToken cancellationToken = default) => await fieldResponseRepository.GetAllFieldResponses(cancellationToken);
+    private IFieldResponseRepository FieldResponseRepository => uow.FieldResponseRepository;
+    private IFieldRepository FieldRepository => uow.FieldRepository;
+    
+    public async ValueTask<IReadOnlyCollection<FieldResponse>> GetAllFieldResponsesAsync(CancellationToken cancellationToken = default) => await FieldResponseRepository.GetAllFieldResponses(cancellationToken);
 
     public async ValueTask<OneOf<FieldResponse, NotFound>> GetFieldResponseByIdAsync(long fieldResponseId, CancellationToken cancellationToken = default)
     {
-        FieldResponse? fieldResponse = await fieldResponseRepository.GetFieldResponseByIdAsync(fieldResponseId, false, cancellationToken);
+        FieldResponse? fieldResponse = await FieldResponseRepository.GetFieldResponseByIdAsync(fieldResponseId, false, cancellationToken);
 
         if (fieldResponse == null)
         {
@@ -70,7 +71,7 @@ internal class FieldResponseService(
     public async ValueTask<OneOf<Success<FieldResponse>, IFieldResponseService.FieldNotFound>> CreateFieldResponseAsync(long fieldId, string telephoneNumber, string value,
                                                                                                                   CancellationToken cancellationToken = default)
     {
-        Field? field = await fieldRepository.GetFieldByIdAsync(fieldId, true, cancellationToken);
+        Field? field = await FieldRepository.GetFieldByIdAsync(fieldId, true, cancellationToken);
 
         if (field == null)
         {
@@ -87,7 +88,7 @@ internal class FieldResponseService(
             SubmittedAt = clock.GetCurrentInstant()
         };
         
-        fieldResponseRepository.AddFieldResponse(response);
+        FieldResponseRepository.AddFieldResponse(response);
         await uow.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Created field response with id {FieldResponseId}", response.Id);
         
@@ -96,7 +97,7 @@ internal class FieldResponseService(
 
     public async ValueTask<OneOf<Success, NotFound>> DeleteFieldResponseAsync(long fieldResponseId, CancellationToken cancellationToken = default)
     {
-        FieldResponse? response = await fieldResponseRepository.GetFieldResponseByIdAsync(fieldResponseId, true, cancellationToken);
+        FieldResponse? response = await FieldResponseRepository.GetFieldResponseByIdAsync(fieldResponseId, true, cancellationToken);
 
         if (response == null)
         {
@@ -105,7 +106,7 @@ internal class FieldResponseService(
             return new NotFound();
         }
         
-        fieldResponseRepository.RemoveFieldResponse(response);
+        FieldResponseRepository.RemoveFieldResponse(response);
         await uow.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Deleted field response with id {FieldResponseId}", response.Id);
 

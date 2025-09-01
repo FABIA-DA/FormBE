@@ -20,7 +20,7 @@ namespace FormBE.Persistence.Migrations
                 schema: "FormBE",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     name = table.Column<string>(type: "text", nullable: false)
                 },
@@ -34,7 +34,7 @@ namespace FormBE.Persistence.Migrations
                 schema: "FormBE",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     name = table.Column<string>(type: "text", nullable: false),
                     description = table.Column<string>(type: "text", nullable: true),
@@ -50,9 +50,9 @@ namespace FormBE.Persistence.Migrations
                 schema: "FormBE",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    parent_id = table.Column<int>(type: "integer", nullable: true),
+                    parent_id = table.Column<long>(type: "bigint", nullable: true),
                     name = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
@@ -72,7 +72,7 @@ namespace FormBE.Persistence.Migrations
                 schema: "FormBE",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     name = table.Column<string>(type: "text", nullable: false)
                 },
@@ -86,9 +86,9 @@ namespace FormBE.Persistence.Migrations
                 schema: "FormBE",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    field_type_id = table.Column<int>(type: "integer", nullable: false),
+                    field_type_id = table.Column<long>(type: "bigint", nullable: false),
                     name = table.Column<string>(type: "text", nullable: false),
                     description = table.Column<string>(type: "text", nullable: true),
                     is_optional = table.Column<bool>(type: "boolean", nullable: false)
@@ -110,9 +110,9 @@ namespace FormBE.Persistence.Migrations
                 schema: "FormBE",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    group_id = table.Column<int>(type: "integer", nullable: true),
+                    group_id = table.Column<long>(type: "bigint", nullable: true),
                     name = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -132,10 +132,10 @@ namespace FormBE.Persistence.Migrations
                 schema: "FormBE",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    field_group_id = table.Column<int>(type: "integer", nullable: false),
-                    single_choice_field_id = table.Column<int>(type: "integer", nullable: false)
+                    field_group_id = table.Column<long>(type: "bigint", nullable: false),
+                    single_choice_field_id = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -161,9 +161,9 @@ namespace FormBE.Persistence.Migrations
                 schema: "FormBE",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    single_choice_field_id = table.Column<int>(type: "integer", nullable: false),
+                    single_choice_field_id = table.Column<long>(type: "bigint", nullable: false),
                     name = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
@@ -183,10 +183,10 @@ namespace FormBE.Persistence.Migrations
                 schema: "FormBE",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    field_group_id = table.Column<int>(type: "integer", nullable: false),
-                    field_id = table.Column<int>(type: "integer", nullable: false)
+                    field_group_id = table.Column<long>(type: "bigint", nullable: false),
+                    field_id = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -212,9 +212,9 @@ namespace FormBE.Persistence.Migrations
                 schema: "FormBE",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    field_id = table.Column<int>(type: "integer", nullable: false),
+                    field_id = table.Column<long>(type: "bigint", nullable: false),
                     telephone_number = table.Column<string>(type: "text", nullable: false),
                     value = table.Column<string>(type: "text", nullable: false),
                     submitted_at = table.Column<Instant>(type: "timestamp with time zone", nullable: false)
@@ -236,10 +236,10 @@ namespace FormBE.Persistence.Migrations
                 schema: "FormBE",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    form_id = table.Column<int>(type: "integer", nullable: false),
-                    field_group_id = table.Column<int>(type: "integer", nullable: false)
+                    form_id = table.Column<long>(type: "bigint", nullable: false),
+                    field_group_id = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -265,10 +265,10 @@ namespace FormBE.Persistence.Migrations
                 schema: "FormBE",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    option_id = table.Column<int>(type: "integer", nullable: false),
-                    field_id = table.Column<int>(type: "integer", nullable: false)
+                    option_id = table.Column<long>(type: "bigint", nullable: false),
+                    field_id = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -294,9 +294,9 @@ namespace FormBE.Persistence.Migrations
                 schema: "FormBE",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    option_id = table.Column<int>(type: "integer", nullable: false),
+                    option_id = table.Column<long>(type: "bigint", nullable: false),
                     telephone_number = table.Column<string>(type: "text", nullable: false),
                     submitted_at = table.Column<Instant>(type: "timestamp with time zone", nullable: false)
                 },

@@ -21,10 +21,12 @@ public class FieldGroupTest
         _mockFieldRepository = Substitute.For<IFieldRepository>();
         _mockSingleChoiceFieldRepository = Substitute.For<ISingleChoiceFieldRepository>();
         IUnitOfWork uow = Substitute.For<IUnitOfWork>();
+        uow.FieldGroupRepository.Returns(_mockFieldGroupRepository);
+        uow.SingleChoiceFieldRepository.Returns(_mockSingleChoiceFieldRepository);
+        uow.FieldRepository.Returns(_mockFieldRepository);
         ILogger<FieldGroupService> logger = Substitute.For<ILogger<FieldGroupService>>();
 
-        _fieldGroupService = new FieldGroupService(_mockFieldGroupRepository, _mockSingleChoiceFieldRepository,
-                                                   _mockFieldRepository, uow, logger);
+        _fieldGroupService = new FieldGroupService(uow, logger);
     }
 
     [Fact]

@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FormBE.Persistence.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20250731213854_Initial")]
-    partial class Initial
+    [Migration("20250901085324_Second")]
+    partial class Second
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -28,19 +28,19 @@ namespace FormBE.Persistence.Migrations
 
             modelBuilder.Entity("FormBE.Persistence.Model.Field", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Description")
                         .HasColumnType("text")
                         .HasColumnName("description");
 
-                    b.Property<int>("FieldTypeId")
-                        .HasColumnType("integer")
+                    b.Property<long>("FieldTypeId")
+                        .HasColumnType("bigint")
                         .HasColumnName("field_type_id");
 
                     b.Property<bool>("IsOptional")
@@ -63,12 +63,12 @@ namespace FormBE.Persistence.Migrations
 
             modelBuilder.Entity("FormBE.Persistence.Model.FieldGroup", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -83,19 +83,19 @@ namespace FormBE.Persistence.Migrations
 
             modelBuilder.Entity("FormBE.Persistence.Model.FieldGroupField", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<int>("FieldGroupId")
-                        .HasColumnType("integer")
+                    b.Property<long>("FieldGroupId")
+                        .HasColumnType("bigint")
                         .HasColumnName("field_group_id");
 
-                    b.Property<int>("FieldId")
-                        .HasColumnType("integer")
+                    b.Property<long>("FieldId")
+                        .HasColumnType("bigint")
                         .HasColumnName("field_id");
 
                     b.HasKey("Id")
@@ -112,19 +112,19 @@ namespace FormBE.Persistence.Migrations
 
             modelBuilder.Entity("FormBE.Persistence.Model.FieldGroupSingleChoiceField", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<int>("FieldGroupId")
-                        .HasColumnType("integer")
+                    b.Property<long>("FieldGroupId")
+                        .HasColumnType("bigint")
                         .HasColumnName("field_group_id");
 
-                    b.Property<int>("SingleChoiceFieldId")
-                        .HasColumnType("integer")
+                    b.Property<long>("SingleChoiceFieldId")
+                        .HasColumnType("bigint")
                         .HasColumnName("single_choice_field_id");
 
                     b.HasKey("Id")
@@ -141,16 +141,16 @@ namespace FormBE.Persistence.Migrations
 
             modelBuilder.Entity("FormBE.Persistence.Model.FieldResponse", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<int>("FieldId")
+                    b.Property<long>("FieldId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("field_id");
 
                     b.Property<Instant>("SubmittedAt")
@@ -178,12 +178,12 @@ namespace FormBE.Persistence.Migrations
 
             modelBuilder.Entity("FormBE.Persistence.Model.FieldType", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Description")
                         .HasColumnType("text")
@@ -207,18 +207,19 @@ namespace FormBE.Persistence.Migrations
 
             modelBuilder.Entity("FormBE.Persistence.Model.Form", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<int?>("GroupId")
-                        .HasColumnType("integer")
+                    b.Property<long?>("GroupId")
+                        .HasColumnType("bigint")
                         .HasColumnName("group_id");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name");
 
@@ -233,19 +234,19 @@ namespace FormBE.Persistence.Migrations
 
             modelBuilder.Entity("FormBE.Persistence.Model.FormFieldGroup", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<int>("FieldGroupId")
-                        .HasColumnType("integer")
+                    b.Property<long>("FieldGroupId")
+                        .HasColumnType("bigint")
                         .HasColumnName("field_group_id");
 
-                    b.Property<int>("FormId")
-                        .HasColumnType("integer")
+                    b.Property<long>("FormId")
+                        .HasColumnType("bigint")
                         .HasColumnName("form_id");
 
                     b.HasKey("Id")
@@ -262,20 +263,20 @@ namespace FormBE.Persistence.Migrations
 
             modelBuilder.Entity("FormBE.Persistence.Model.Group", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name");
 
-                    b.Property<int?>("ParentId")
-                        .HasColumnType("integer")
+                    b.Property<long?>("ParentId")
+                        .HasColumnType("bigint")
                         .HasColumnName("parent_id");
 
                     b.HasKey("Id")
@@ -289,20 +290,20 @@ namespace FormBE.Persistence.Migrations
 
             modelBuilder.Entity("FormBE.Persistence.Model.Option", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name");
 
-                    b.Property<int>("SingleChoiceFieldId")
-                        .HasColumnType("integer")
+                    b.Property<long>("SingleChoiceFieldId")
+                        .HasColumnType("bigint")
                         .HasColumnName("single_choice_field_id");
 
                     b.HasKey("Id")
@@ -316,19 +317,19 @@ namespace FormBE.Persistence.Migrations
 
             modelBuilder.Entity("FormBE.Persistence.Model.OptionField", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<int>("FieldId")
-                        .HasColumnType("integer")
+                    b.Property<long>("FieldId")
+                        .HasColumnType("bigint")
                         .HasColumnName("field_id");
 
-                    b.Property<int>("OptionId")
-                        .HasColumnType("integer")
+                    b.Property<long>("OptionId")
+                        .HasColumnType("bigint")
                         .HasColumnName("option_id");
 
                     b.HasKey("Id")
@@ -345,15 +346,15 @@ namespace FormBE.Persistence.Migrations
 
             modelBuilder.Entity("FormBE.Persistence.Model.OptionResponse", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<int>("OptionId")
-                        .HasColumnType("integer")
+                    b.Property<long>("OptionId")
+                        .HasColumnType("bigint")
                         .HasColumnName("option_id");
 
                     b.Property<Instant>("SubmittedAt")
@@ -376,12 +377,12 @@ namespace FormBE.Persistence.Migrations
 
             modelBuilder.Entity("FormBE.Persistence.Model.SingleChoiceField", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()

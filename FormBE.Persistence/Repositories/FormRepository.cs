@@ -21,33 +21,34 @@ public interface IFormRepository
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>All forms without tracking.</returns>
     public ValueTask<IReadOnlyCollection<Form>> GetFormsAsync(CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Get a subset of existing forms with tracking.
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <param name="formIds">The ids of the forms to get.</param>
     /// <returns>Gets the requested forms with tracking.</returns>
-    public ValueTask<IReadOnlyCollection<Form>> GetFormsByIdsAsync(CancellationToken cancellationToken = default, params List<long> formIds);
-    
+    public ValueTask<IReadOnlyCollection<Form>> GetFormsByIdsAsync(CancellationToken cancellationToken = default,
+                                                                   params List<long> formIds);
+
     /// <summary>
     /// Adds tracking for this form.
     /// </summary>
     /// <param name="form">The form to add.</param>
     public void AddForm(Form form);
-    
+
     /// <summary>
     /// Begins tracking for the form with the <see cref="EntityState.Deleted"/> state.
     /// </summary>
     /// <param name="form">The form to delete.</param>
     public void RemoveForm(Form form);
-    
+
     /// <summary>
     /// Adds tracking for the new <see cref="FormFieldGroup"/>.
     /// </summary>
     /// <param name="fieldGroup">The item to add.</param>
     public void AddFormFieldGroup(FormFieldGroup fieldGroup);
-    
+
     /// <summary>
     /// Begins tracking of the <see cref="FormFieldGroup"/> with the <see cref="EntityState.Deleted"/> state.
     /// </summary>
@@ -70,7 +71,9 @@ internal class FormRepository(DbSet<Form> forms, DbSet<FormFieldGroup> formField
             query = NoTracking;
         }
 
-        Form? form = await query.Include(f => f.FormFieldGroups)
+        Form? form = await query.Include(f => f.Group)
+                                .Include(f => f.FormFieldGroups)
+                                .ThenInclude(ffg => ffg.FieldGroup)
                                 .FirstOrDefaultAsync(x => x.Id == formId, cancellationToken);
 
         return form;
@@ -85,15 +88,16 @@ internal class FormRepository(DbSet<Form> forms, DbSet<FormFieldGroup> formField
         return coll;
     }
 
-    public async ValueTask<IReadOnlyCollection<Form>> GetFormsByIdsAsync(CancellationToken cancellationToken = default, params List<long> formIds)
+    public async ValueTask<IReadOnlyCollection<Form>> GetFormsByIdsAsync(
+        CancellationToken cancellationToken = default, params List<long> formIds)
     {
         if (formIds.Count == 0)
         {
             return [];
         }
-        
+
         IQueryable<Form> query = Forms.Where(f => formIds.Contains(f.Id));
-        
+
         IReadOnlyCollection<Form> coll = await query.ToListAsync(cancellationToken);
 
         return coll;

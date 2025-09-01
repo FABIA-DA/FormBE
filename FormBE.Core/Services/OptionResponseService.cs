@@ -48,19 +48,20 @@ public interface IOptionResponseService
 }
 
 internal class OptionResponseService(
-    IOptionResponseRepository optionResponseRepository,
     IUnitOfWork uow,
     IClock clock,
     ILogger<OptionResponseService> logger) : IOptionResponseService
 {
+    private IOptionResponseRepository OptionResponseRepository => uow.OptionResponseRepository;
+    
     public async ValueTask<IReadOnlyCollection<OptionResponse>>
         GetOptionResponsesAsync(CancellationToken cancellationToken = default) =>
-        await optionResponseRepository.GetOptionResponsesAsync(cancellationToken);
+        await OptionResponseRepository.GetOptionResponsesAsync(cancellationToken);
 
     public async ValueTask<OneOf<OptionResponse, NotFound>> GetOptionResponseByIdAsync(
         long optionResponseId, CancellationToken cancellationToken = default)
     {
-        OptionResponse? optionResponse = await optionResponseRepository.GetOptionResponseByIdAsync(optionResponseId, false, cancellationToken);
+        OptionResponse? optionResponse = await OptionResponseRepository.GetOptionResponseByIdAsync(optionResponseId, false, cancellationToken);
 
         if (optionResponse == null)
         {
@@ -76,7 +77,7 @@ internal class OptionResponseService(
         long optionId, string telephoneNumber,
         CancellationToken cancellationToken = default)
     {
-        Option? option = await optionResponseRepository.GetOptionByIdAsync(optionId, true, cancellationToken);
+        Option? option = await OptionResponseRepository.GetOptionByIdAsync(optionId, true, cancellationToken);
 
         if (option == null)
         {
@@ -92,7 +93,7 @@ internal class OptionResponseService(
             SubmittedAt = clock.GetCurrentInstant()
         };
         
-        optionResponseRepository.AddOptionResponse(response);
+        OptionResponseRepository.AddOptionResponse(response);
         await uow.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Created new option response with id {OptionResponseId}", response.Id);
         
@@ -102,7 +103,7 @@ internal class OptionResponseService(
     public async ValueTask<OneOf<Success, NotFound>> DeleteOptionResponseAsync(
         long optionResponseId, CancellationToken cancellationToken = default)
     {
-        OptionResponse? response = await optionResponseRepository.GetOptionResponseByIdAsync(optionResponseId, true, cancellationToken);
+        OptionResponse? response = await OptionResponseRepository.GetOptionResponseByIdAsync(optionResponseId, true, cancellationToken);
 
         if (response == null)
         {
@@ -111,7 +112,7 @@ internal class OptionResponseService(
             return new NotFound();
         }
         
-        optionResponseRepository.RemoveOptionResponse(response);
+        OptionResponseRepository.RemoveOptionResponse(response);
         await  uow.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Deleted option response with id {OptionResponseId}", optionResponseId);
 

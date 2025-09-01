@@ -20,7 +20,9 @@ public class GroupServiceTest
         _mockFormRepository = Substitute.For<IFormRepository>();
         ILogger<GroupService> logger = Substitute.For<ILogger<GroupService>>();
         IUnitOfWork uow = Substitute.For<IUnitOfWork>();
-        _groupService = new GroupService(_mockGroupRepository, _mockFormRepository, uow, logger);
+        uow.GroupRepository.Returns(_mockGroupRepository);
+        uow.FormRepository.Returns(_mockFormRepository);
+        _groupService = new GroupService(uow, logger);
     }
 
     [Fact]

@@ -95,6 +95,9 @@ internal class SingleChoiceFieldRepository(DbSet<SingleChoiceField> singleChoice
 
         SingleChoiceField? field = await query.Include(f => f.Options)
                                               .ThenInclude(o => o.OptionFields)
+                                              .ThenInclude(o => o.Field)
+                                              .ThenInclude(o => o.FieldType)
+                                              .AsSplitQuery()
                                               .FirstOrDefaultAsync(f => f.Id == singleChoiceFieldId, cancellationToken);
 
         return field;
@@ -120,7 +123,11 @@ internal class SingleChoiceFieldRepository(DbSet<SingleChoiceField> singleChoice
         
         IQueryable<SingleChoiceField> query = SingleChoiceFields.Where(f => singleChoiceFieldIds.Contains(f.Id));
         
-        IReadOnlyCollection<SingleChoiceField> coll = await query.ToListAsync(cancellationToken);
+        IReadOnlyCollection<SingleChoiceField> coll = await query.Include(f => f.Options)
+                                                                 .ThenInclude(o => o.OptionFields)
+                                                                 .ThenInclude(o => o.Field)
+                                                                 .AsSplitQuery()
+                                                                 .ToListAsync(cancellationToken);
         
         return coll;
     }

@@ -63,21 +63,22 @@ public interface IFieldGroupService
 }
 
 internal class FieldGroupService(
-    IFieldGroupRepository fieldGroupRepository,
-    ISingleChoiceFieldRepository singleChoiceFieldRepository,
-    IFieldRepository fieldRepository,
     IUnitOfWork uow,
     ILogger<FieldGroupService> logger) : IFieldGroupService
 {
+    private IFieldGroupRepository FieldGroupRepository => uow.FieldGroupRepository;
+    private ISingleChoiceFieldRepository SingleChoiceFieldRepository => uow.SingleChoiceFieldRepository;
+    private IFieldRepository FieldRepository => uow.FieldRepository;
+    
     public async ValueTask<IReadOnlyCollection<FieldGroup>>
         GetFieldGroupsAsync(CancellationToken cancellationToken = default) =>
-        await fieldGroupRepository.GetFieldGroupsAsync(cancellationToken);
+        await FieldGroupRepository.GetFieldGroupsAsync(cancellationToken);
 
     public async ValueTask<OneOf<FieldGroup, NotFound>> GetFieldGroupByIdAsync(
         long fieldGroupId, CancellationToken cancellationToken = default)
     {
         FieldGroup? fieldGroup
-            = await fieldGroupRepository.GetFieldGroupByIdAsync(fieldGroupId, false, cancellationToken);
+            = await FieldGroupRepository.GetFieldGroupByIdAsync(fieldGroupId, false, cancellationToken);
 
         if (fieldGroup == null)
         {
@@ -102,10 +103,10 @@ internal class FieldGroupService(
         };
 
         IReadOnlyCollection<SingleChoiceField> singleChoiceFields
-            = await singleChoiceFieldRepository.GetSingleChoiceFieldsByIdsAsync(cancellationToken,
+            = await SingleChoiceFieldRepository.GetSingleChoiceFieldsByIdsAsync(cancellationToken,
                                                                                 singleChoiceFieldIds);
 
-        IReadOnlyCollection<Field> fields = await fieldRepository.GetFieldsByIdsAsync(cancellationToken,
+        IReadOnlyCollection<Field> fields = await FieldRepository.GetFieldsByIdsAsync(cancellationToken,
          fieldIds);
 
         fieldGroup.FieldGroupSingleChoiceFields = singleChoiceFields.Select(f => new FieldGroupSingleChoiceField()
@@ -120,7 +121,7 @@ internal class FieldGroupService(
             Field = f
         }).ToList();
 
-        fieldGroupRepository.AddFieldGroup(fieldGroup);
+        FieldGroupRepository.AddFieldGroup(fieldGroup);
         await uow.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Created field group with id {FieldGroupId}", fieldGroup.Id);
 
@@ -134,7 +135,7 @@ internal class FieldGroupService(
                                                                                = default)
     {
         FieldGroup? fieldGroup
-            = await fieldGroupRepository.GetFieldGroupByIdAsync(fieldGroupId, true, cancellationToken);
+            = await FieldGroupRepository.GetFieldGroupByIdAsync(fieldGroupId, true, cancellationToken);
 
         if (fieldGroup == null)
         {
@@ -144,6 +145,11 @@ internal class FieldGroupService(
             return new NotFound();
         }
 
+        if (fieldGroup.Name != name)
+        {
+            fieldGroup.Name = name;
+        }
+        
         if (!fieldGroup.FieldGroupSingleChoiceFields.IdsEqual(singleChoiceFieldIds, f => f.SingleChoiceFieldId))
         {
             (List<long> newIds, List<FieldGroupSingleChoiceField> stillSingleChoiceFields,
@@ -151,48 +157,36 @@ internal class FieldGroupService(
                 = fieldGroup.FieldGroupSingleChoiceFields.SeparateItemsById(singleChoiceFieldIds,
                                                                             fgscf => fgscf.SingleChoiceFieldId);
 
-            foreach (FieldGroupSingleChoiceField fgscf in oldSingleChoiceFields)
-            {
-                fieldGroupRepository.RemoveFieldGroupSingleChoiceField(fgscf);
-            }
+            FieldGroupRepository.RemoveFieldGroupSingleChoiceFields(oldSingleChoiceFields);
             
             List<FieldGroupSingleChoiceField> newSingleChoiceFields
-                = (await singleChoiceFieldRepository.GetSingleChoiceFieldsByIdsAsync(cancellationToken,
+                = (await SingleChoiceFieldRepository.GetSingleChoiceFieldsByIdsAsync(cancellationToken,
                  newIds)).Select(f => new FieldGroupSingleChoiceField()
                 {
                     FieldGroup = fieldGroup,
                     SingleChoiceField = f
                 }).ToList();
 
-            foreach (FieldGroupSingleChoiceField fgscf in newSingleChoiceFields)
-            {
-                fieldGroupRepository.RemoveFieldGroupSingleChoiceField(fgscf);
-            }
+            FieldGroupRepository.AddFieldGroupSingleChoiceFields(newSingleChoiceFields);
 
             fieldGroup.FieldGroupSingleChoiceFields = stillSingleChoiceFields.Concat(newSingleChoiceFields).ToList();
         }
 
         if (!fieldGroup.FieldGroupFields.IdsEqual(fieldIds, f => f.FieldId))
         {
-            (List<long> newIds, List<FieldGroupField> stillFieldGroupFields, List<FieldGroupField> oldfieldGroupFields)
+            (List<long> newIds, List<FieldGroupField> stillFieldGroupFields, List<FieldGroupField> oldFieldGroupFields)
                 = fieldGroup.FieldGroupFields.SeparateItemsById(fieldIds, fgf => fgf.FieldId);
 
-            foreach (FieldGroupField fgf in oldfieldGroupFields)
-            {
-                fieldGroupRepository.RemoveFieldGroupField(fgf);
-            }
+            FieldGroupRepository.RemoveFieldGroupFields(oldFieldGroupFields);
 
-            List<FieldGroupField> newFields = (await fieldRepository.GetFieldsByIdsAsync(cancellationToken, newIds))
+            List<FieldGroupField> newFields = (await FieldRepository.GetFieldsByIdsAsync(cancellationToken, newIds))
                                               .Select(f => new FieldGroupField()
                                               {
                                                   FieldGroup = fieldGroup,
                                                   Field = f
                                               }).ToList();
 
-            foreach (FieldGroupField fgf in newFields)
-            {
-                fieldGroupRepository.AddFieldGroupField(fgf);
-            }
+            FieldGroupRepository.AddFieldGroupFields(newFields);
 
             fieldGroup.FieldGroupFields = stillFieldGroupFields.Concat(newFields).ToList();
         }
@@ -208,7 +202,7 @@ internal class FieldGroupService(
                                                                                = default)
     {
         FieldGroup? fieldGroup
-            = await fieldGroupRepository.GetFieldGroupByIdAsync(fieldGroupId, true, cancellationToken);
+            = await FieldGroupRepository.GetFieldGroupByIdAsync(fieldGroupId, true, cancellationToken);
 
         if (fieldGroup == null)
         {
@@ -218,7 +212,7 @@ internal class FieldGroupService(
             return new NotFound();
         }
 
-        fieldGroupRepository.RemoveFieldGroup(fieldGroup);
+        FieldGroupRepository.RemoveFieldGroup(fieldGroup);
         await uow.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Deleted the field group with id {FieldGroupId}", fieldGroup.Id);
 

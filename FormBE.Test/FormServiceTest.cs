@@ -21,8 +21,11 @@ public class FormServiceTest
         _mockGroupRepository = Substitute.For<IGroupRepository>();
         _mockFieldGroupRepository = Substitute.For<IFieldGroupRepository>();
         IUnitOfWork uow = Substitute.For<IUnitOfWork>();
+        uow.FormRepository.Returns(_mockFormRepository);
+        uow.GroupRepository.Returns(_mockGroupRepository);
+        uow.FieldGroupRepository.Returns(_mockFieldGroupRepository);
         ILogger<FormService> logger = Substitute.For<ILogger<FormService>>();
-        _formService = new FormService(_mockFormRepository, _mockGroupRepository, _mockFieldGroupRepository, uow,
+        _formService = new FormService(uow,
                                        logger);
     }
 
@@ -86,7 +89,7 @@ public class FormServiceTest
     {
         List<FieldGroup> fieldGroups = Util.GetTestFieldGroups();
         List<long> fieldGroupIds = fieldGroups.GetIds();
-        
+
         if (groupId.HasValue)
         {
             Group testGroup = new()
@@ -99,8 +102,9 @@ public class FormServiceTest
             _mockGroupRepository.GetGroupByIdAsync(groupId.Value, false, TestContext.Current.CancellationToken)
                                 .Returns(testGroup);
         }
-        
-        _mockFieldGroupRepository.GetFieldGroupsByIdsAsync(TestContext.Current.CancellationToken, fieldGroupIds).Returns(fieldGroups);
+
+        _mockFieldGroupRepository.GetFieldGroupsByIdsAsync(TestContext.Current.CancellationToken, fieldGroupIds)
+                                 .Returns(fieldGroups);
 
         OneOf<Success<Form>, IFormService.GroupNotFound> result
             = await _formService.CreateFormAsync(groupId, name, fieldGroupIds, TestContext.Current.CancellationToken);
@@ -123,7 +127,6 @@ public class FormServiceTest
                             .Returns((Group?) null);
         _mockFieldGroupRepository.GetFieldGroupsByIdsAsync(TestContext.Current.CancellationToken, []).Returns([]);
 
-
         OneOf<Success<Form>, IFormService.GroupNotFound> result
             = await _formService.CreateFormAsync(FormId, "Space Form", [], TestContext.Current.CancellationToken);
 
@@ -143,7 +146,7 @@ public class FormServiceTest
     {
         List<FieldGroup> fieldGroups = Util.GetTestFieldGroups();
         List<long> fieldGroupIds = fieldGroups.GetIds();
-        
+
         Form testForm = new()
         {
             Id = 0L,
@@ -165,7 +168,9 @@ public class FormServiceTest
 
         _mockFormRepository.GetFormByIdAsync(testForm.Id, true, TestContext.Current.CancellationToken)
                            .Returns(testForm);
-        _mockFieldGroupRepository.GetFieldGroupsByIdsAsync(TestContext.Current.CancellationToken, Arg.Is<List<long>>(ids => ids.SequenceEqual(fieldGroupIds))).Returns(fieldGroups);
+        _mockFieldGroupRepository
+            .GetFieldGroupsByIdsAsync(TestContext.Current.CancellationToken,
+                                      Arg.Is<List<long>>(ids => ids.SequenceEqual(fieldGroupIds))).Returns(fieldGroups);
 
         if (newGroupId.HasValue)
         {
@@ -210,7 +215,6 @@ public class FormServiceTest
         _mockFormRepository.GetFormByIdAsync(0, true, TestContext.Current.CancellationToken).Returns((Form?) null);
         _mockFieldGroupRepository.GetFieldGroupsByIdsAsync(TestContext.Current.CancellationToken, []).Returns([]);
 
-
         OneOf<Success, NotFound, IFormService.GroupNotFound> result
             = await _formService.UpdateFormAsync(0, testGroup.Id, "New Name", [],
                                                  TestContext.Current.CancellationToken);
@@ -242,7 +246,6 @@ public class FormServiceTest
         _mockFormRepository.GetFormByIdAsync(testForm.Id, true, TestContext.Current.CancellationToken)
                            .Returns(testForm);
         _mockFieldGroupRepository.GetFieldGroupsByIdsAsync(TestContext.Current.CancellationToken, []).Returns([]);
-
 
         OneOf<Success, NotFound, IFormService.GroupNotFound> result
             = await _formService.UpdateFormAsync(testForm.Id, TestGroupId, "New Name", [],

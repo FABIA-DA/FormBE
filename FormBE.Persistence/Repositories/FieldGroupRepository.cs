@@ -44,28 +44,28 @@ public interface IFieldGroupRepository
     public void RemoveFieldGroup(FieldGroup fieldGroup);
     
     /// <summary>
-    /// Adds a new <see cref="FieldGroupSingleChoiceField"/> to the tracking.
+    /// Adds multiple new <see cref="FieldGroupSingleChoiceField"/> to the tracking.
     /// </summary>
-    /// <param name="fieldGroupSingleChoiceField">The item to add.</param>
-    public void AddFieldGroupSingleChoiceField(FieldGroupSingleChoiceField fieldGroupSingleChoiceField);
+    /// <param name="fields">The items to add.</param>
+    public void AddFieldGroupSingleChoiceFields(params IEnumerable<FieldGroupSingleChoiceField> fields);
     
     /// <summary>
-    /// Begins tracking of a <see cref="FieldGroupSingleChoiceField"/> with the <see cref="EntityState.Deleted"/> state.
+    /// Begins tracking of a variable amount of <see cref="FieldGroupSingleChoiceField"/> with the <see cref="EntityState.Deleted"/> state.
     /// </summary>
-    /// <param name="fieldGroupSingleChoiceField">The item to delete.</param>
-    public void RemoveFieldGroupSingleChoiceField(FieldGroupSingleChoiceField fieldGroupSingleChoiceField);
+    /// <param name="fields">The items to delete.</param>
+    public void RemoveFieldGroupSingleChoiceFields(params IEnumerable<FieldGroupSingleChoiceField> fields);
     
     /// <summary>
-    /// Adds a new <see cref="FieldGroupField"/> to the tracking.
+    /// Adds multiple new <see cref="FieldGroupField"/> to the tracking.
     /// </summary>
-    /// <param name="fieldGroupField">The item to add.</param>
-    public void AddFieldGroupField(FieldGroupField fieldGroupField);
+    /// <param name="fields">The items to add.</param>
+    public void AddFieldGroupFields(params IEnumerable<FieldGroupField> fields);
     
     /// <summary>
-    /// Begins tracking of a <see cref="FieldGroupField"/> with the <see cref="EntityState.Deleted"/> state.
+    /// Begins tracking of multiple <see cref="FieldGroupField"/> with the <see cref="EntityState.Deleted"/> state.
     /// </summary>
-    /// <param name="fieldGroupField">The item to delete.</param>
-    public void RemoveFieldGroupField(FieldGroupField fieldGroupField);
+    /// <param name="fields">The items to delete.</param>
+    public void RemoveFieldGroupFields(params IEnumerable<FieldGroupField> fields);
 }
 
 internal class FieldGroupRepository(DbSet<FieldGroup> fieldGroups, DbSet<FieldGroupSingleChoiceField> fieldGroupSingleChoiceFields, DbSet<FieldGroupField> fieldGroupFields) : IFieldGroupRepository
@@ -84,7 +84,12 @@ internal class FieldGroupRepository(DbSet<FieldGroup> fieldGroups, DbSet<FieldGr
         }
 
         FieldGroup? fieldGroup = await query.Include(f => f.FieldGroupSingleChoiceFields)
+                                            .ThenInclude(fgscf => fgscf.SingleChoiceField)
+                                            .ThenInclude(scf => scf.Options)
                                             .Include(f => f.FieldGroupFields)
+                                            .ThenInclude(fgf => fgf.Field)
+                                            .ThenInclude(f => f.FieldType)
+                                            .AsSplitQuery()
                                             .FirstOrDefaultAsync(g => g.Id == fieldGroupId, cancellationToken);
 
         return fieldGroup;
@@ -124,23 +129,23 @@ internal class FieldGroupRepository(DbSet<FieldGroup> fieldGroups, DbSet<FieldGr
         fieldGroups.Remove(fieldGroup);
     }
 
-    public void AddFieldGroupSingleChoiceField(FieldGroupSingleChoiceField fieldGroupSingleChoiceField)
+    public void AddFieldGroupSingleChoiceFields(params IEnumerable<FieldGroupSingleChoiceField> fields)
     {
-        fieldGroupSingleChoiceFields.Add(fieldGroupSingleChoiceField);
+        fieldGroupSingleChoiceFields.AddRange(fields);
     }
 
-    public void RemoveFieldGroupSingleChoiceField(FieldGroupSingleChoiceField fieldGroupSingleChoiceField)
+    public void RemoveFieldGroupSingleChoiceFields(params IEnumerable<FieldGroupSingleChoiceField> fields)
     {
-        fieldGroupSingleChoiceFields.Remove(fieldGroupSingleChoiceField);
+        fieldGroupSingleChoiceFields.RemoveRange(fields);
     }
 
-    public void AddFieldGroupField(FieldGroupField fieldGroupField)
+    public void AddFieldGroupFields(params IEnumerable<FieldGroupField> fields)
     {
-        fieldGroupFields.Add(fieldGroupField);
+        fieldGroupFields.AddRange(fields);
     }
 
-    public void RemoveFieldGroupField(FieldGroupField fieldGroupField)
+    public void RemoveFieldGroupFields(params IEnumerable<FieldGroupField> fields)
     {
-        fieldGroupFields.Remove(fieldGroupField);
+        fieldGroupFields.RemoveRange(fields);
     }
 }

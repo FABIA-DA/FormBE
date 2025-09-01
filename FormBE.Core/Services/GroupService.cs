@@ -67,19 +67,20 @@ public interface IGroupService
 }
 
 internal class GroupService(
-    IGroupRepository groupRepository,
-    IFormRepository formRepository,
     IUnitOfWork uow,
     ILogger<GroupService> logger)
     : IGroupService
 {
+    private IGroupRepository GroupRepository => uow.GroupRepository;
+    private IFormRepository FormRepository => uow.FormRepository;
+    
     public async ValueTask<IReadOnlyCollection<Group>> GetGroupsAsync(CancellationToken cancellationToken = default) =>
-        await groupRepository.GetGroupsAsync(cancellationToken);
+        await GroupRepository.GetGroupsAsync(cancellationToken);
 
     public async ValueTask<OneOf<Group, NotFound>> GetGroupByIdAsync(long groupId,
                                                                      CancellationToken cancellationToken = default)
     {
-        Group? group = await groupRepository.GetGroupByIdAsync(groupId, false, cancellationToken);
+        Group? group = await GroupRepository.GetGroupByIdAsync(groupId, false, cancellationToken);
 
         if (group == null)
         {
@@ -97,7 +98,7 @@ internal class GroupService(
     {
         if (parentGroupId.HasValue)
         {
-            Group? parent = await groupRepository.GetGroupByIdAsync(parentGroupId.Value, false, cancellationToken);
+            Group? parent = await GroupRepository.GetGroupByIdAsync(parentGroupId.Value, false, cancellationToken);
 
             if (parent == null)
             {
@@ -107,9 +108,9 @@ internal class GroupService(
             }
         }
         
-        IReadOnlyCollection<Group> subgroups = subGroupIds.Count == 0 ? [] : await groupRepository.GetGroupsByIdsAsync(cancellationToken, subGroupIds);
+        IReadOnlyCollection<Group> subgroups = subGroupIds.Count == 0 ? [] : await GroupRepository.GetGroupsByIdsAsync(cancellationToken, subGroupIds);
 
-        IReadOnlyCollection<Form> forms = formIds.Count == 0 ? [] : await formRepository.GetFormsByIdsAsync(cancellationToken, formIds);
+        IReadOnlyCollection<Form> forms = formIds.Count == 0 ? [] : await FormRepository.GetFormsByIdsAsync(cancellationToken, formIds);
         
         Group group = new()
         {
@@ -119,7 +120,7 @@ internal class GroupService(
             Forms = forms.ToList()
         };
 
-        groupRepository.AddGroup(group);
+        GroupRepository.AddGroup(group);
         await uow.SaveChangesAsync(cancellationToken);
         logger.LogInformation("New group with id {GroupId} was created", group.Id);
 
@@ -131,7 +132,7 @@ internal class GroupService(
                          List<long> formIds,
                          CancellationToken cancellationToken = default)
     {
-        Group? group = await groupRepository.GetGroupByIdAsync(groupId, true, cancellationToken);
+        Group? group = await GroupRepository.GetGroupByIdAsync(groupId, true, cancellationToken);
 
         if (group == null)
         {
@@ -150,7 +151,7 @@ internal class GroupService(
                 return new IGroupService.ParentIsSelf();
             }
 
-            Group? parent = await groupRepository.GetGroupByIdAsync(parentGroupId.Value, false, cancellationToken);
+            Group? parent = await GroupRepository.GetGroupByIdAsync(parentGroupId.Value, false, cancellationToken);
 
             if (parent == null)
             {
@@ -170,7 +171,7 @@ internal class GroupService(
         
         if (!group.SubGroups.IdsEqual(subGroupIds, g => g.Id))
         {
-            IReadOnlyCollection<Group> subGroups = await groupRepository.GetGroupsByIdsAsync(cancellationToken, subGroupIds);
+            IReadOnlyCollection<Group> subGroups = await GroupRepository.GetGroupsByIdsAsync(cancellationToken, subGroupIds);
 
             group.SubGroups = subGroups.ToList();
         }
@@ -180,7 +181,7 @@ internal class GroupService(
         
         if (!group.Forms.IdsEqual(formIds, f => f.Id))
         {
-            IReadOnlyCollection<Form> forms = await formRepository.GetFormsByIdsAsync(cancellationToken, formIds);
+            IReadOnlyCollection<Form> forms = await FormRepository.GetFormsByIdsAsync(cancellationToken, formIds);
 
             group.Forms = forms.ToList();
         }
@@ -195,7 +196,7 @@ internal class GroupService(
     public async ValueTask<OneOf<Success, NotFound>> DeleteGroupAsync(long groupId,
                                                                       CancellationToken cancellationToken = default)
     {
-        Group? group = await groupRepository.GetGroupByIdAsync(groupId, true, cancellationToken);
+        Group? group = await GroupRepository.GetGroupByIdAsync(groupId, true, cancellationToken);
 
         if (group == null)
         {
@@ -204,7 +205,7 @@ internal class GroupService(
             return new NotFound();
         }
 
-        groupRepository.RemoveGroup(group);
+        GroupRepository.RemoveGroup(group);
         await uow.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Deleted group with id {GroupId}", groupId);
 

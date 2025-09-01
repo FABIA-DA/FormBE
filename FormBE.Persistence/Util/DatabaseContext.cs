@@ -165,7 +165,8 @@ public sealed class DatabaseContext(DbContextOptions<DatabaseContext> options) :
         fieldBuilder.HasOne(f => f.FieldType)
                     .WithMany(ft => ft.Fields)
                     .HasForeignKey(f => f.FieldTypeId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired(true);
         
         fieldBuilder.HasMany(f => f.FieldResponses)
                     .WithOne(fr => fr.Field)

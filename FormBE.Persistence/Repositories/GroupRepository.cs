@@ -58,8 +58,10 @@ internal class GroupRepository(DbSet<Group> groups) : IGroupRepository
             query = NoTracking;
         }
 
-        Group? group = await query.Include(g => g.Forms)
+        Group? group = await query.Include(g => g.Parent)
+                                  .Include(g => g.Forms)
                                   .Include(g => g.SubGroups)
+                                  .AsSplitQuery()
                                   .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
         return group;

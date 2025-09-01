@@ -61,20 +61,21 @@ public interface ISingleChoiceFieldService
 }
 
 internal class SingleChoiceFieldService(
-    ISingleChoiceFieldRepository singleChoiceFieldRepository,
-    IFieldRepository fieldRepository,
     IUnitOfWork uow,
     ILogger<SingleChoiceFieldService> logger) : ISingleChoiceFieldService
 {
+    private ISingleChoiceFieldRepository SingleChoiceFieldRepository => uow.SingleChoiceFieldRepository;
+    private IFieldRepository FieldRepository => uow.FieldRepository;
+    
     public async ValueTask<IReadOnlyCollection<SingleChoiceField>> GetSingleChoiceFieldsAsync(
         CancellationToken cancellationToken = default) =>
-        await singleChoiceFieldRepository.GetSingleChoiceFieldsAsync(cancellationToken);
+        await SingleChoiceFieldRepository.GetSingleChoiceFieldsAsync(cancellationToken);
 
     public async ValueTask<OneOf<SingleChoiceField, NotFound>> GetSingleChoiceFieldByIdAsync(
         long singleChoiceFieldId, CancellationToken cancellationToken = default)
     {
         SingleChoiceField? singleChoiceField
-            = await singleChoiceFieldRepository.GetSingleChoiceFieldByIdAsync(singleChoiceFieldId, false,
+            = await SingleChoiceFieldRepository.GetSingleChoiceFieldByIdAsync(singleChoiceFieldId, false,
                                                                               cancellationToken);
 
         if (singleChoiceField == null)
@@ -103,7 +104,7 @@ internal class SingleChoiceFieldService(
 
         List<long> fieldIds = options.SelectMany(o => o.FieldIds).ToList();
 
-        IReadOnlyCollection<Field> fields = await fieldRepository.GetFieldsByIdsAsync(cancellationToken, fieldIds);
+        IReadOnlyCollection<Field> fields = await FieldRepository.GetFieldsByIdsAsync(cancellationToken, fieldIds);
         List<List<Field>> orderedFields = [];
         int k = 0;
 
@@ -139,19 +140,20 @@ internal class SingleChoiceFieldService(
 
             foreach (var optionField in optionFields)
             {
-                singleChoiceFieldRepository.AddOptionField(optionField);
+                SingleChoiceFieldRepository.AddOptionField(optionField);
             }
 
             option.OptionFields = optionFields;
 
-            singleChoiceFieldRepository.AddOption(option);
+            SingleChoiceFieldRepository.AddOption(option);
 
             realOptions.Add(option);
         }
 
         field.Options = realOptions;
 
-        singleChoiceFieldRepository.AddSingleChoiceField(field);
+        SingleChoiceFieldRepository.AddSingleChoiceField(field);
+        await uow.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Created single choice field with id {SingleChoiceFieldId}", field.Id);
 
         return field;
@@ -163,7 +165,7 @@ internal class SingleChoiceFieldService(
         CancellationToken cancellationToken = default)
     {
         SingleChoiceField? singleChoiceField
-            = await singleChoiceFieldRepository.GetSingleChoiceFieldByIdAsync(singleChoiceFieldId, true,
+            = await SingleChoiceFieldRepository.GetSingleChoiceFieldByIdAsync(singleChoiceFieldId, true,
                                                                               cancellationToken);
 
         if (singleChoiceField == null)
@@ -190,10 +192,10 @@ internal class SingleChoiceFieldService(
             {
                 foreach (var optionField in option.OptionFields)
                 {
-                    singleChoiceFieldRepository.RemoveOptionField(optionField);
+                    SingleChoiceFieldRepository.RemoveOptionField(optionField);
                 }
 
-                singleChoiceFieldRepository.RemoveOption(option);
+                SingleChoiceFieldRepository.RemoveOption(option);
             }
 
             singleChoiceField.Options = stillOptions;
@@ -205,7 +207,7 @@ internal class SingleChoiceFieldService(
         {
             List<long> fieldIds = newOptions.SelectMany(o => o.FieldIds).ToList();
 
-            IReadOnlyCollection<Field> fields = await fieldRepository.GetFieldsByIdsAsync(cancellationToken, fieldIds);
+            IReadOnlyCollection<Field> fields = await FieldRepository.GetFieldsByIdsAsync(cancellationToken, fieldIds);
             int k = 0;
             
             for (var i = 0; i < newOptions.Count; i++)
@@ -237,11 +239,11 @@ internal class SingleChoiceFieldService(
                              Field = f
                          }))
                 {
-                    singleChoiceFieldRepository.AddOptionField(optionFields);
+                    SingleChoiceFieldRepository.AddOptionField(optionFields);
                     option.OptionFields.Add(optionFields);
                 }
                 
-                singleChoiceFieldRepository.AddOption(option);
+                SingleChoiceFieldRepository.AddOption(option);
                 singleChoiceField.Options.Add(option);
             }
         }
@@ -255,7 +257,7 @@ internal class SingleChoiceFieldService(
     public async ValueTask<OneOf<Success, NotFound>> DeleteSingleChoiceFieldAsync(
         long singleChoiceFieldId, CancellationToken cancellationToken = default)
     {
-        SingleChoiceField? field = await singleChoiceFieldRepository.GetSingleChoiceFieldByIdAsync(singleChoiceFieldId, true, cancellationToken);
+        SingleChoiceField? field = await SingleChoiceFieldRepository.GetSingleChoiceFieldByIdAsync(singleChoiceFieldId, true, cancellationToken);
 
         if (field == null)
         {
@@ -264,7 +266,7 @@ internal class SingleChoiceFieldService(
             return new NotFound();
         }
         
-        singleChoiceFieldRepository.RemoveSingleChoiceField(field);
+        SingleChoiceFieldRepository.RemoveSingleChoiceField(field);
         await uow.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Deleted single choice field with id {SingleChoiceFieldId}", field.Id);
 

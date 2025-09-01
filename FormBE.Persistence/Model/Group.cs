@@ -6,6 +6,6 @@ public class Group
     public long? ParentId { get; set; }
     public required string Name { get; set; }
     public Group? Parent { get; set; }
-    public required List<Group> SubGroups { get; set; }
-    public required List<Form> Forms { get; set; }
+    public required List<Group> SubGroups { get; set; } = [];
+    public required List<Form> Forms { get; set; } = [];
 }

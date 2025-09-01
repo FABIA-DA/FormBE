@@ -19,8 +19,10 @@ public class FieldServiceTest
         _mockFieldRepository = Substitute.For<IFieldRepository>();
         _mockFieldTypeRepository = Substitute.For<IFieldTypeRepository>();
         IUnitOfWork uow = Substitute.For<IUnitOfWork>();
+        uow.FieldRepository.Returns(_mockFieldRepository);
+        uow.FieldTypeRepository.Returns(_mockFieldTypeRepository);
         ILogger<FieldService> logger = Substitute.For<ILogger<FieldService>>();
-        _fieldService = new FieldService(_mockFieldRepository, _mockFieldTypeRepository, uow, logger);
+        _fieldService = new FieldService(uow, logger);
     }
 
     [Fact]

@@ -8,7 +8,7 @@ public class Field
     public required string? Description { get; set; }
     public bool IsOptional { get; set; }
     public required FieldType FieldType { get; set; }
-    public required List<OptionField> OptionFields { get; set; }
-    public required List<FieldGroupField> FieldGroupFields { get; set; }
-    public required List<FieldResponse> FieldResponses { get; set; }
+    public required List<OptionField> OptionFields { get; set; } = [];
+    public required List<FieldGroupField> FieldGroupFields { get; set; } = [];
+    public required List<FieldResponse> FieldResponses { get; set; } = [];
 }

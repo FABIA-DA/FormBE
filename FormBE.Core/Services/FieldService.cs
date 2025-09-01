@@ -64,18 +64,19 @@ public interface IFieldService
 }
 
 internal class FieldService(
-    IFieldRepository fieldRepository,
-    IFieldTypeRepository fieldTypeRepository,
     IUnitOfWork uow,
     ILogger<FieldService> logger) : IFieldService
 {
+    private IFieldRepository FieldRepository => uow.FieldRepository;
+    private IFieldTypeRepository FieldTypeRepository => uow.FieldTypeRepository;
+    
     public async ValueTask<IReadOnlyCollection<Field>> GetFieldsAsync(CancellationToken cancellationToken = default) =>
-        await fieldRepository.GetFieldsAsync(cancellationToken);
+        await FieldRepository.GetFieldsAsync(cancellationToken);
 
     public async ValueTask<OneOf<Field, NotFound>> GetFieldByIdAsync(long fieldId,
                                                                      CancellationToken cancellationToken = default)
     {
-        Field? field = await fieldRepository.GetFieldByIdAsync(fieldId, false, cancellationToken);
+        Field? field = await FieldRepository.GetFieldByIdAsync(fieldId, false, cancellationToken);
 
         if (field == null)
         {
@@ -91,7 +92,7 @@ internal class FieldService(
         long fieldTypeId, string name, string? description, bool isOptional,
         CancellationToken cancellationToken = default)
     {
-        FieldType? type = await fieldTypeRepository.GetFieldTypeByIdAsync(fieldTypeId, true, cancellationToken);
+        FieldType? type = await FieldTypeRepository.GetFieldTypeByIdAsync(fieldTypeId, true, cancellationToken);
 
         if (type == null)
         {
@@ -112,7 +113,7 @@ internal class FieldService(
             FieldResponses = []
         };
 
-        fieldRepository.AddField(field);
+        FieldRepository.AddField(field);
         await uow.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Created field with id {FieldId}", field.Id);
 
@@ -123,7 +124,7 @@ internal class FieldService(
         long fieldId, long fieldTypeId, string name, string? description, bool isOptional,
         CancellationToken cancellationToken = default)
     {
-        Field? field = await fieldRepository.GetFieldByIdAsync(fieldId, true, cancellationToken);
+        Field? field = await FieldRepository.GetFieldByIdAsync(fieldId, true, cancellationToken);
 
         if (field == null)
         {
@@ -135,7 +136,7 @@ internal class FieldService(
         if (field.FieldTypeId != fieldTypeId)
         {
             FieldType? type
-                = await fieldTypeRepository.GetFieldTypeByIdAsync(fieldTypeId, true, cancellationToken);
+                = await FieldTypeRepository.GetFieldTypeByIdAsync(fieldTypeId, true, cancellationToken);
 
             if (type == null)
             {
@@ -172,7 +173,7 @@ internal class FieldService(
     public async ValueTask<OneOf<Success, NotFound>> DeleteFieldAsync(long fieldId,
                                                                       CancellationToken cancellationToken = default)
     {
-        Field? field = await fieldRepository.GetFieldByIdAsync(fieldId, true, cancellationToken);
+        Field? field = await FieldRepository.GetFieldByIdAsync(fieldId, true, cancellationToken);
 
         if (field == null)
         {
@@ -181,7 +182,7 @@ internal class FieldService(
             return new NotFound();
         }
 
-        fieldRepository.RemoveField(field);
+        FieldRepository.RemoveField(field);
         await uow.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Deleted field with id {FieldId}", field.Id);
 

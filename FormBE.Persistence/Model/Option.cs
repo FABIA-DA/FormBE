@@ -6,6 +6,6 @@ public class Option
     public long SingleChoiceFieldId { get; set; }
     public required string Name { get; set; }
     public required SingleChoiceField SingleChoiceField { get; set; }
-    public required List<OptionField> OptionFields { get; set; }
-    public required List<OptionResponse> OptionResponses { get; set; }
+    public required List<OptionField> OptionFields { get; set; } = [];
+    public required List<OptionResponse> OptionResponses { get; set; } = [];
 }

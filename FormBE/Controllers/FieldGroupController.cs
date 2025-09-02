@@ -9,8 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FormBE.Controllers;
 
-[ApiController]
-[Route("api/fieldGroups")]
+[Route("api/field-groups")]
 public sealed class FieldGroupController(
     ITransactionProvider transaction,
     IFieldGroupService fieldGroupService,
@@ -55,9 +54,9 @@ public sealed class FieldGroupController(
     [ProducesResponseType<FieldGroupDto>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async ValueTask<ActionResult<FieldGroupDto>> CreateFieldGroup(
-        [FromBody] FieldGroupRequest request, CancellationToken cancellationToken = default)
+        [FromBody] FieldGroupCreationRequest request, CancellationToken cancellationToken = default)
     {
-        FieldGroupRequest.Validator validator = new FieldGroupRequest.Validator();
+        FieldGroupCreationRequest.Validator validator = new FieldGroupCreationRequest.Validator();
         ValidationResult valResult = await validator.ValidateAsync(request, cancellationToken);
         if (!valResult.IsValid)
         {
@@ -83,7 +82,7 @@ public sealed class FieldGroupController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async ValueTask<IActionResult> UpdateFieldGroupById([FromRoute] long id,
-                                                               [FromBody] FieldGroupRequest request,
+                                                               [FromBody] FieldGroupUpdateRequest request,
                                                                CancellationToken cancellationToken = default)
     {
         if (id < 1)
@@ -94,7 +93,7 @@ public sealed class FieldGroupController(
             return BadRequest("Id must be greater than 0");
         }
 
-        FieldGroupRequest.Validator validator = new FieldGroupRequest.Validator();
+        FieldGroupUpdateRequest.Validator validator = new FieldGroupUpdateRequest.Validator();
         ValidationResult valResult = await validator.ValidateAsync(request, cancellationToken);
         if (!valResult.IsValid)
         {
@@ -155,13 +154,30 @@ public sealed class FieldGroupListResponse
     public required List<FieldGroupDto> FieldGroups { get; set; }
 }
 
-public sealed class FieldGroupRequest
+public sealed class FieldGroupCreationRequest
 {
     public required string Name { get; set; }
     public required List<long> SingleChoiceFieldIds { get; set; }
     public required List<long> FieldIds { get; set; }
 
-    public sealed class Validator : AbstractValidator<FieldGroupRequest>
+    public sealed class Validator : AbstractValidator<FieldGroupCreationRequest>
+    {
+        public Validator()
+        {
+            RuleFor(x => x.Name).NotNull().NotEmpty();
+            RuleFor(x => x.SingleChoiceFieldIds).NotNull();
+            RuleFor(x => x.FieldIds).NotNull();
+        }
+    }
+}
+
+public sealed class FieldGroupUpdateRequest
+{
+    public required string Name { get; set; }
+    public required List<long> SingleChoiceFieldIds { get; set; }
+    public required List<long> FieldIds { get; set; }
+
+    public sealed class Validator : AbstractValidator<FieldGroupUpdateRequest>
     {
         public Validator()
         {

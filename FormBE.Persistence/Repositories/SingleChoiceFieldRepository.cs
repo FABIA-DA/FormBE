@@ -52,29 +52,29 @@ public interface ISingleChoiceFieldRepository
     public ValueTask<IReadOnlyCollection<Option>> GetOptionsByIdsAsync(CancellationToken cancellationToken = default, params List<long> optionIds);
     
     /// <summary>
-    /// Begins tracking for a <see cref="Option"/>.
+    /// Begins tracking for multiple <see cref="Option"/>.
     /// </summary>
-    /// <param name="option">The option to be added.</param>
-    public void AddOption(Option option);
+    /// <param name="newOptions">The options to be added.</param>
+    public void AddOptions(params IEnumerable<Option> newOptions);
 
     
     /// <summary>
-    /// Begins to track for a <see cref="Option"/> with the <see cref="EntityState.Deleted"/> state.
+    /// Begins to track for multiple <see cref="Option"/> with the <see cref="EntityState.Deleted"/> state.
     /// </summary>
-    /// <param name="option">The option to delete.</param>
-    public void RemoveOption(Option option);
+    /// <param name="oldOptions">The options to delete.</param>
+    public void RemoveOptions(params IEnumerable<Option> oldOptions);
     
     /// <summary>
-    /// Begins tracking for a <see cref="OptionField"/>.
+    /// Begins tracking for multiple <see cref="OptionField"/>.
     /// </summary>
-    /// <param name="optionField">The item to add.</param>
-    public void AddOptionField(OptionField optionField);
+    /// <param name="fields">The items to add.</param>
+    public void AddOptionFields(params IEnumerable<OptionField> fields);
     
     /// <summary>
-    /// Begins tracking for a <see cref="OptionField"/> with the <see cref="EntityState.Deleted"/> state.
+    /// Begins tracking for multiple <see cref="OptionField"/> with the <see cref="EntityState.Deleted"/> state.
     /// </summary>
-    /// <param name="optionField">The item to delete.</param>
-    public void RemoveOptionField(OptionField optionField);
+    /// <param name="fields">The items to delete.</param>
+    public void RemoveOptionFields(params IEnumerable<OptionField> fields);
 }
 
 internal class SingleChoiceFieldRepository(DbSet<SingleChoiceField> singleChoiceFields, DbSet<Option> options, DbSet<OptionField> optionFields) : ISingleChoiceFieldRepository
@@ -158,23 +158,23 @@ internal class SingleChoiceFieldRepository(DbSet<SingleChoiceField> singleChoice
         return coll;
     }
 
-    public void AddOption(Option option)
+    public void AddOptions(params IEnumerable<Option> newOptions)
     {
-        options.Add(option);
+        options.AddRange(newOptions);
     }
 
-    public void RemoveOption(Option option)
+    public void RemoveOptions(params IEnumerable<Option> oldOptions)
     {
-        options.Remove(option);
+        options.RemoveRange(oldOptions);
+    }
+    
+    public void AddOptionFields(params IEnumerable<OptionField> fields)
+    {
+        optionFields.AddRange(fields);
     }
 
-    public void AddOptionField(OptionField optionField)
+    public void RemoveOptionFields(params IEnumerable<OptionField> fields)
     {
-        optionFields.Add(optionField);
-    }
-
-    public void RemoveOptionField(OptionField optionField)
-    {
-        optionFields.Remove(optionField);
+        optionFields.RemoveRange(fields);
     }
 }

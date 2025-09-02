@@ -46,7 +46,7 @@ public interface IOptionResponseRepository
 internal class OptionResponseRepository(DbSet<OptionResponse> optionResponses, DbSet<Option> options) : IOptionResponseRepository
 {
     private IQueryable<OptionResponse> OptionResponses => optionResponses;
-    private IQueryable<OptionResponse> NoTracking => OptionResponses.AsNoTracking();
+    private IQueryable<OptionResponse> NoTracking => optionResponses.AsNoTracking();
     
     public async ValueTask<OptionResponse?> GetOptionResponseByIdAsync(long optionResponseId, bool tracking = true,
                                                                        CancellationToken cancellationToken = default)

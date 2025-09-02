@@ -68,7 +68,8 @@ internal class FieldRepository(DbSet<Field> fields) : IFieldRepository
     {
         IQueryable<Field> query = NoTracking;
 
-        IReadOnlyCollection<Field> coll = await query.ToListAsync(cancellationToken);
+        IReadOnlyCollection<Field> coll = await query.Include(f => f.FieldType)
+            .ToListAsync(cancellationToken);
 
         return coll;
     }

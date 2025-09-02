@@ -51,35 +51,43 @@ public sealed class FormTests(WebApiTestFixture webApiTestFixture) : WebApiTestB
     [Fact]
     public async Task CreateForm_CheckExistence_Success()
     {
-        const long Id = 1L;
-        FormCreationRequest request = new FormCreationRequest()
-        {
-            Name = "Super Special Events",
-            GroupId = 1L,
-            FieldGroupIds = [1L]
-        };
+        long parentGroupId = 0L;
+        long fieldGroupId = 0L;
 
         await ModifyDatabaseContentAsync(async ctx =>
         {
-            ctx.Groups.Add(new Group()
+            var g1 = new Group()
             {
                 Name = "Special Events",
                 ParentId = null,
                 Parent = null,
                 SubGroups = [],
                 Forms = []
-            });
-
-            ctx.FieldGroups.Add(new FieldGroup()
+            };
+            var fg1 = new FieldGroup()
             {
                 Name = "Location",
                 FormFieldGroups = [],
                 FieldGroupFields = [],
                 FieldGroupSingleChoiceFields = []
-            });
+            };
+            
+            ctx.Groups.Add(g1);
+
+            ctx.FieldGroups.Add(fg1);
 
             await ctx.SaveChangesAsync(TestCancellationToken);
+            
+            parentGroupId = g1.Id;
+            fieldGroupId = fg1.Id;
         });
+        
+        FormCreationRequest request = new FormCreationRequest()
+        {
+            Name = "Super Special Events",
+            GroupId = parentGroupId,
+            FieldGroupIds = [fieldGroupId]
+        };
 
         var response
             = await ApiClient.PostAsJsonAsync<FormCreationRequest>("/api/forms", request, JsonOptions,
@@ -87,14 +95,14 @@ public sealed class FormTests(WebApiTestFixture webApiTestFixture) : WebApiTestB
         
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         response.Headers.Location.Should().NotBeNull();
-        response.Headers.Location.AbsolutePath.Should().Be($"/api/forms/{Id}");
+        response.Headers.Location.AbsolutePath.Should().StartWith("/api/forms/");
         
         var content = await response.Content.ReadFromJsonAsync<FormDto>(TestCancellationToken);
 
         content.Should().NotBeNull();
         ShouldBeSameProperties(content, request);
         
-        var getResponse = await ApiClient.GetAsync($"/api/forms/{Id}", TestCancellationToken);
+        var getResponse = await ApiClient.GetAsync(response.Headers.Location.AbsolutePath, TestCancellationToken);
         
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var getContent = await getResponse.Content.ReadFromJsonAsync<FormDto>(TestCancellationToken);
@@ -115,50 +123,59 @@ public sealed class FormTests(WebApiTestFixture webApiTestFixture) : WebApiTestB
     [Fact]
     public async Task UpdateForm_CheckChange_Success()
     {
-        const long Id = 1L;
-        FormUpdateRequest request = new FormUpdateRequest()
-        {
-            Name = "Super Unspecial Events",
-            GroupId = 1L,
-            FieldGroupIds = [1L]
-        };
+        long formId = 0L;
+        long groupId = 0L;
+        long fieldGroupId = 0L;
         
         await ModifyDatabaseContentAsync(async ctx =>
         {
-            ctx.Groups.Add(new Group()
+            var g1 = new Group()
             {
                 Name = "Inquiry",
                 ParentId = null,
                 Parent = null,
                 SubGroups = [],
                 Forms = []
-            });
-
-            ctx.Forms.Add(new Form()
+            };
+            var f1 = new Form()
             {
                 Name = "Super Special Events",
                 GroupId = null,
                 Group = null,
                 FormFieldGroups = []
-            });
-
-            ctx.FieldGroups.Add(new FieldGroup()
+            };
+            var fg1 = new FieldGroup()
             {
                 Name = "Location",
                 FormFieldGroups = [],
                 FieldGroupFields = [],
                 FieldGroupSingleChoiceFields = []
-            });
+            };
+            
+            ctx.Groups.Add(g1);
+            ctx.Forms.Add(f1);
+            ctx.FieldGroups.Add(fg1);
 
             await ctx.SaveChangesAsync(TestCancellationToken);
-        });
 
-        var response = await ApiClient.PutAsJsonAsync($"/api/forms/{Id}", request, JsonOptions, TestCancellationToken);
+            formId = f1.Id;
+            groupId = g1.Id;
+            fieldGroupId = fg1.Id;
+        });
+        
+        FormUpdateRequest request = new FormUpdateRequest()
+        {
+            Name = "Super Unspecial Events",
+            GroupId = groupId,
+            FieldGroupIds = [fieldGroupId]
+        };
+
+        var response = await ApiClient.PutAsJsonAsync($"/api/forms/{formId}", request, JsonOptions, TestCancellationToken);
         
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
         response.Content.Headers.Should().BeEmpty();
         
-        var getResponse = await ApiClient.GetAsync($"/api/forms/{Id}", TestCancellationToken);
+        var getResponse = await ApiClient.GetAsync($"/api/forms/{formId}", TestCancellationToken);
         
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var getContent = await getResponse.Content.ReadFromJsonAsync<FormDto>(TestCancellationToken);
@@ -172,27 +189,31 @@ public sealed class FormTests(WebApiTestFixture webApiTestFixture) : WebApiTestB
     [Fact]
     public async Task DeleteForm_CheckExistence_Success()
     {
-        const long Id = 1L;
+        long formId = 0L;
 
         await ModifyDatabaseContentAsync(async ctx =>
         {
-            ctx.Forms.Add(new Form()
+            var f1 = new Form()
             {
                 Name = "Normal Events",
                 GroupId = null,
                 Group = null,
                 FormFieldGroups = []
-            });
+            };
+            
+            ctx.Forms.Add(f1);
 
             await ctx.SaveChangesAsync(TestCancellationToken);
+            
+            formId = f1.Id;
         });
         
-        var response = await ApiClient.DeleteAsync($"/api/forms/{Id}", TestCancellationToken);
+        var response = await ApiClient.DeleteAsync($"/api/forms/{formId}", TestCancellationToken);
         
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
         response.Content.Headers.Should().BeEmpty();
         
-        var getResponse = await ApiClient.GetAsync($"/api/forms/{Id}", TestCancellationToken);
+        var getResponse = await ApiClient.GetAsync($"/api/forms/{formId}", TestCancellationToken);
         
         getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }

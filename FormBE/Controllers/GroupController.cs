@@ -11,7 +11,6 @@ using OneOf.Types;
 
 namespace FormBE.Controllers;
 
-[ApiController]
 [Route("api/groups")]
 public sealed class GroupController(
     ITransactionProvider transaction,

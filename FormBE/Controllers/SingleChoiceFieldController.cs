@@ -3,13 +3,13 @@ using FluentValidation.Results;
 using FormBE.Core.Logic;
 using FormBE.Core.Services;
 using FormBE.Persistence.Util;
+using FormBE.Shared;
 using FormBE.Util;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FormBE.Controllers;
 
-[ApiController]
-[Route("api/singleChoiceFields")]
+[Route("api/single-choice-fields")]
 public sealed class SingleChoiceFieldController(
     ITransactionProvider transaction,
     ISingleChoiceFieldService singleChoiceFieldService,
@@ -71,12 +71,90 @@ public sealed class SingleChoiceFieldController(
         await transaction.BeginTransactionAsync(cancellationToken);
 
         var result = await singleChoiceFieldService.CreateSingleChoiceFieldAsync(request.Name,
-             request.Options.Select(kv => (kv.Key, kv.Value)).ToList(), cancellationToken);
+         NewOptionsToTuples(request.Options), cancellationToken);
 
         await transaction.CommitAsync(cancellationToken);
 
         return CreatedAtAction(nameof(GetSingleChoiceFieldById), new { id = result.Id }, result.ToDto());
     }
+
+    [HttpPut]
+    [Route("{id:long}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async ValueTask<IActionResult> UpdateSingleChoiceFieldById([FromRoute] long id,
+                                                                      [FromBody] SingleChoiceFieldUpdateRequest request,
+                                                                      CancellationToken cancellationToken = default)
+    {
+        if (id < 1)
+        {
+            logger.LogInformation("Tried to update single choice field with id {singleChoiceFieldId}, but the id must be greater than 0",
+                                  id);
+
+            return BadRequest("Id must be greater than 0");
+        }
+
+        SingleChoiceFieldUpdateRequest.Validator validator = new SingleChoiceFieldUpdateRequest.Validator();
+        ValidationResult valResult = await validator.ValidateAsync(request, cancellationToken);
+        if (!valResult.IsValid)
+        {
+            logger.LogInformation("Tried to update single choice field with id {singleChoiceFieldId}, but the request is invalid: {errors}",
+                                  id, valResult.Errors);
+
+            return BadRequest(valResult.Errors);
+        }
+
+        await transaction.BeginTransactionAsync(cancellationToken);
+
+        var result = await singleChoiceFieldService.UpdateSingleChoiceFieldAsync(id, request.Name,
+         OldOptionsToTuples(request.OldOptions),
+         NewOptionsToTuples(request.NewOptions), cancellationToken);
+
+        return await result.Match<ValueTask<IActionResult>>(async success =>
+                                                            {
+                                                                await transaction.CommitAsync(cancellationToken);
+
+                                                                return NoContent();
+                                                            },
+                                                            notFound => ValueTask
+                                                                .FromResult<IActionResult>(NotFound()));
+    }
+
+    [HttpDelete]
+    [Route("{id:long}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async ValueTask<IActionResult> DeleteSingleChoiceFieldById([FromRoute] long id,
+                                                                      CancellationToken cancellationToken = default)
+    {
+        if (id < 1)
+        {
+            logger.LogInformation("Tried to delete single choice field with id {singleChoiceFieldId}, but the id must be greater than 0",
+                                  id);
+
+            return BadRequest("Id must be greater than 0");
+        }
+
+        await transaction.BeginTransactionAsync(cancellationToken);
+        
+        var result = await singleChoiceFieldService.DeleteSingleChoiceFieldAsync(id, cancellationToken);
+
+        return await result.Match<ValueTask<IActionResult>>(async success =>
+        {
+            await transaction.CommitAsync(cancellationToken);
+
+            return NoContent();
+        }, notFound => ValueTask.FromResult<IActionResult>(NotFound()));
+    }
+
+    private static List<(string Name, List<long> FieldIds)> NewOptionsToTuples(IEnumerable<NewOptions> options) =>
+        options.Select(o => (o.Name, o.FieldIds)).ToList();
+
+    private static List<(long Id, string Name, List<long> FieldIds)>
+        OldOptionsToTuples(IEnumerable<OldOptions> options) =>
+        options.Select(o => (o.Id, o.Name, o.FieldIds)).ToList();
 }
 
 public sealed class SingleChoiceFieldListResponse
@@ -84,10 +162,23 @@ public sealed class SingleChoiceFieldListResponse
     public required List<SingleChoiceFieldDto> Fields { get; set; }
 }
 
+public sealed class NewOptions
+{
+    public required string Name { get; set; }
+    public required List<long> FieldIds { get; set; }
+}
+
+public sealed class OldOptions
+{
+    public long Id { get; set; }
+    public required string Name { get; set; }
+    public required List<long> FieldIds { get; set; }
+}
+
 public sealed class SingleChoiceFieldCreationRequest
 {
     public required string Name { get; set; }
-    public required Dictionary<string, List<long>> Options { get; set; }
+    public required List<NewOptions> Options { get; set; }
 
     public sealed class Validator : AbstractValidator<SingleChoiceFieldCreationRequest>
     {
@@ -95,7 +186,6 @@ public sealed class SingleChoiceFieldCreationRequest
         {
             RuleFor(x => x.Name).NotNull().NotEmpty();
             RuleFor(x => x.Options).NotNull();
-            RuleFor(x => x.Options.Keys).NotEmpty();
         }
     }
 }
@@ -103,8 +193,8 @@ public sealed class SingleChoiceFieldCreationRequest
 public sealed class SingleChoiceFieldUpdateRequest
 {
     public required string Name { get; set; }
-    public required Dictionary<string, List<long>> OldOptions { get; set; }
-    public required Dictionary<string, List<long>> NewOptions { get; set; }
+    public required List<OldOptions> OldOptions { get; set; }
+    public required List<NewOptions> NewOptions { get; set; }
 
     public sealed class Validator : AbstractValidator<SingleChoiceFieldUpdateRequest>
     {
@@ -112,9 +202,7 @@ public sealed class SingleChoiceFieldUpdateRequest
         {
             RuleFor(x => x.Name).NotNull().NotEmpty();
             RuleFor(x => x.OldOptions).NotNull();
-            RuleFor(x => x.OldOptions.Keys).NotEmpty();
             RuleFor(x => x.NewOptions).NotNull();
-            RuleFor(x => x.NewOptions.Keys).NotEmpty();
         }
     }
 }

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using FormBE.Persistence.Util;
 using FormBE.Shared;
+using NodaTime.Serialization.SystemTextJson;
 
 namespace FormBE.TestInt.Util;
 
@@ -10,6 +11,7 @@ public abstract class WebApiTestBase(WebApiTestFixture webApiFixture) : IClassFi
     {
         var options = new JsonSerializerOptions(JsonSerializerOptions.Web);
         JsonConfig.ConfigureJsonSerialization(options, false);
+        options.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
 
         return options;
     });

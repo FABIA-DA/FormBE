@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FormBE.Controllers;
 
-[ApiController]
 [Route("api/forms")]
 public sealed class FormController(
     ITransactionProvider transaction,

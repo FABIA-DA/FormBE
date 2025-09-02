@@ -127,7 +127,7 @@ public class SingleChoiceFieldServiceTest
         List<(long Id, string Name, List<long> FieldIds)> passedOptions = Util.GetTestOptions();
         SingleChoiceField field = new()
         {
-            Id = 0,
+            Id = 0L,
             Name = "Field 1",
             FieldGroupSingleChoiceFields = [],
             Options = []

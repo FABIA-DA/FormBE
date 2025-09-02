@@ -8,28 +8,28 @@ public static class Util
     [
         new()
         {
-            Id = 0,
+            Id = 0L,
             Name = "Forms",
             SubGroups = [],
             Forms = []
         },
         new()
         {
-            Id = 1,
+            Id = 1L,
             Name = "Art",
             SubGroups = [],
             Forms = []
         },
         new()
         {
-            Id = 2,
+            Id = 2L,
             Name = "Business",
             SubGroups = [],
             Forms = []
         },
         new()
         {
-            Id = 3,
+            Id = 3L,
             Name = "Other",
             SubGroups = [],
             Forms = []
@@ -40,7 +40,7 @@ public static class Util
     [
         new()
         {
-            Id = 0,
+            Id = 0L,
             GroupId = null,
             Name = "House Building Form",
             Group = null,
@@ -48,7 +48,7 @@ public static class Util
         },
         new()
         {
-            Id = 1,
+            Id = 1L,
             GroupId = null,
             Name = "Forest Work Form",
             Group = null,
@@ -56,7 +56,7 @@ public static class Util
         },
         new()
         {
-            Id = 2,
+            Id = 2L,
             GroupId = null,
             Name = "Fishing Form",
             Group = null,
@@ -64,7 +64,7 @@ public static class Util
         },
         new()
         {
-            Id = 3,
+            Id = 3L,
             GroupId = null,
             Name = "Business Form",
             Group = null,
@@ -76,7 +76,7 @@ public static class Util
     [
         new()
         {
-            Id = 0,
+            Id = 0L,
             Name = "Contact",
             FormFieldGroups = [],
             FieldGroupSingleChoiceFields = [],
@@ -84,7 +84,7 @@ public static class Util
         },
         new()
         {
-            Id = 1,
+            Id = 1L,
             Name = "Details",
             FormFieldGroups = [],
             FieldGroupSingleChoiceFields = [],
@@ -92,7 +92,7 @@ public static class Util
         },
         new()
         {
-            Id = 2,
+            Id = 2L,
             Name = "Person",
             FormFieldGroups = [],
             FieldGroupSingleChoiceFields = [],
@@ -100,7 +100,7 @@ public static class Util
         },
         new()
         {
-            Id = 3,
+            Id = 3L,
             Name = "Work-Related",
             FormFieldGroups = [],
             FieldGroupSingleChoiceFields = [],
@@ -112,28 +112,28 @@ public static class Util
     [
         new()
         {
-            Id = 0,
+            Id = 0L,
             Name = "Gender",
             Options = [],
             FieldGroupSingleChoiceFields = [],
         },
         new()
         {
-            Id = 1,
+            Id = 1L,
             Name = "Organization Status",
             Options = [],
             FieldGroupSingleChoiceFields = [],
         },
         new()
         {
-            Id = 2,
+            Id = 2L,
             Name = "Personal Status",
             Options = [],
             FieldGroupSingleChoiceFields = [],
         },
         new()
         {
-            Id = 3,
+            Id = 3L,
             Name = "Business Status",
             Options = [],
             FieldGroupSingleChoiceFields = [],
@@ -143,15 +143,15 @@ public static class Util
     public static List<Field> GetTestFields() => [
         new()
         {
-            Id = 0,
-            FieldTypeId = 0,
+            Id = 0L,
+            FieldTypeId = 0L,
             Name = "Postal Code",
             Description = null,
             IsOptional = false,
             FieldResponses = [],
             FieldType = new()
             {
-                Id = 0,
+                Id = 0L,
                 Name = "Number",
                 Description = null,
                 Regex = "",
@@ -162,15 +162,15 @@ public static class Util
         },
         new()
         {
-            Id = 1,
-            FieldTypeId = 0,
+            Id = 1L,
+            FieldTypeId = 0L,
             Name = "Street Number",
             Description = null,
             IsOptional = false,
             FieldResponses = [],
             FieldType = new()
             {
-                Id = 0,
+                Id = 0L,
                 Name = "Number",
                 Description = null,
                 Regex = "",
@@ -181,15 +181,15 @@ public static class Util
         },
         new()
         {
-            Id = 2,
-            FieldTypeId = 0,
+            Id = 2L,
+            FieldTypeId = 0L,
             Name = "How old are you",
             Description = null,
             IsOptional = false,
             FieldResponses = [],
             FieldType = new()
             {
-                Id = 0,
+                Id = 0L,
                 Name = "Number",
                 Description = null,
                 Regex = "",
@@ -200,15 +200,15 @@ public static class Util
         },
         new()
         {
-            Id = 3,
-            FieldTypeId = 0,
+            Id = 3L,
+            FieldTypeId = 0L,
             Name = "Height",
             Description = null,
             IsOptional = false,
             FieldResponses = [],
             FieldType = new()
             {
-                Id = 0,
+                Id = 0L,
                 Name = "Number",
                 Description = null,
                 Regex = "",
@@ -220,25 +220,25 @@ public static class Util
     ];
 
     public static List<(long Id, string Name, List<long> FieldIds)> GetTestOptions() => [
-        (0, "Option 1", [0, 1]),
-        (1, "Option 2", [0]),
-        (2, "Option 3", []),
-        (3, "Option 4", [2, 4])
+        (0L, "Option 1", [0L, 1L]),
+        (1L, "Option 2", [0L]),
+        (2L, "Option 3", []),
+        (3L, "Option 4", [2L, 4L])
     ];
 
     public static List<OptionResponse> GetTestOptionResponses() => [
         new()
         {
-            Id = 0,
+            Id = 0L,
             TelephoneNumber = "0000",
             SubmittedAt = Instant.FromUtc(2025, 8, 4, 0, 0),
             Option = new()
             {
-                Id = 0,
+                Id = 0L,
                 Name = "Option 1",
                 SingleChoiceField = new()
                 {
-                    Id = 0,
+                    Id = 0L,
                     Name = "Single Choice Field 1",
                     FieldGroupSingleChoiceFields = [],
                     Options = []
@@ -249,16 +249,16 @@ public static class Util
         },
         new()
         {
-            Id = 1,
+            Id = 1L,
             TelephoneNumber = "0001",
             SubmittedAt = Instant.FromUtc(2025, 8, 4, 1, 0),
             Option = new()
             {
-                Id = 0,
+                Id = 0L,
                 Name = "Option 1",
                 SingleChoiceField = new()
                 {
-                    Id = 0,
+                    Id = 0L,
                     Name = "Single Choice Field 1",
                     FieldGroupSingleChoiceFields = [],
                     Options = []
@@ -269,16 +269,16 @@ public static class Util
         },
         new()
         {
-            Id = 2,
+            Id = 2L,
             TelephoneNumber = "0002",
             SubmittedAt = Instant.FromUtc(2025, 8, 4, 2, 0),
             Option = new()
             {
-                Id = 0,
+                Id = 0L,
                 Name = "Option 1",
                 SingleChoiceField = new()
                 {
-                    Id = 0,
+                    Id = 0L,
                     Name = "Single Choice Field 1",
                     FieldGroupSingleChoiceFields = [],
                     Options = []
@@ -289,16 +289,16 @@ public static class Util
         },
         new()
         {
-            Id = 3,
+            Id = 3L,
             TelephoneNumber = "0003",
             SubmittedAt = Instant.FromUtc(2025, 8, 4, 3, 0),
             Option = new()
             {
-                Id = 0,
+                Id = 0L,
                 Name = "Option 1",
                 SingleChoiceField = new()
                 {
-                    Id = 0,
+                    Id = 0L,
                     Name = "Single Choice Field 1",
                     FieldGroupSingleChoiceFields = [],
                     Options = []
@@ -312,7 +312,7 @@ public static class Util
     public static List<FieldType> GetTestFieldTypes() => [
         new()
         {
-            Id = 0,
+            Id = 0L,
             Name = "Number",
             Description = null,
             Regex = "\\d+",
@@ -320,7 +320,7 @@ public static class Util
         },
         new()
         {
-            Id = 1,
+            Id = 1L,
             Name = "String",
             Description = null,
             Regex = "\\w+",
@@ -328,7 +328,7 @@ public static class Util
         },
         new()
         {
-            Id = 2,
+            Id = 2L,
             Name = "Postal Code",
             Description = null,
             Regex = "\\d{4}",
@@ -336,7 +336,7 @@ public static class Util
         },
         new()
         {
-            Id = 3,
+            Id = 3L,
             Name = "EAN-13",
             Description = null,
             Regex = "\\d{13}",
@@ -347,13 +347,13 @@ public static class Util
     public static List<FieldResponse> GetTestFieldResponses() => [
         new()
         {
-            Id = 0,
+            Id = 0L,
             TelephoneNumber = "0000",
             Value = "test",
             SubmittedAt = Instant.FromUtc(2025, 8, 4, 0, 0),
             Field = new()
             {
-                Id = 0,
+                Id = 0L,
                 Name = "Input",
                 Description =null,
                 IsOptional = false,
@@ -362,7 +362,7 @@ public static class Util
                 OptionFields = [],
                 FieldType = new()
                 {
-                    Id = 0,
+                    Id = 0L,
                     Name = "Text",
                     Description = null,
                     Regex = "\\w+",
@@ -372,13 +372,13 @@ public static class Util
         },
         new()
         {
-            Id = 1,
+            Id = 1L,
             TelephoneNumber = "0001",
             Value = "test",
             SubmittedAt = Instant.FromUtc(2025, 8, 4, 0, 0),
             Field = new()
             {
-                Id = 0,
+                Id = 0L,
                 Name = "Input",
                 Description =null,
                 IsOptional = false,
@@ -387,7 +387,7 @@ public static class Util
                 OptionFields = [],
                 FieldType = new()
                 {
-                    Id = 0,
+                    Id = 0L,
                     Name = "Text",
                     Description = null,
                     Regex = "\\w+",
@@ -397,13 +397,13 @@ public static class Util
         },
         new()
         {
-            Id = 2,
+            Id = 2L,
             TelephoneNumber = "0002",
             Value = "test",
             SubmittedAt = Instant.FromUtc(2025, 8, 4, 0, 0),
             Field = new()
             {
-                Id = 0,
+                Id = 0L,
                 Name = "Input",
                 Description =null,
                 IsOptional = false,
@@ -412,7 +412,7 @@ public static class Util
                 OptionFields = [],
                 FieldType = new()
                 {
-                    Id = 0,
+                    Id = 0L,
                     Name = "Text",
                     Description = null,
                     Regex = "\\w+",
@@ -422,13 +422,13 @@ public static class Util
         },
         new()
         {
-            Id = 3,
+            Id = 3L,
             TelephoneNumber = "0003",
             Value = "test",
             SubmittedAt = Instant.FromUtc(2025, 8, 4, 0, 0),
             Field = new()
             {
-                Id = 0,
+                Id = 0L,
                 Name = "Input",
                 Description =null,
                 IsOptional = false,
@@ -437,7 +437,7 @@ public static class Util
                 OptionFields = [],
                 FieldType = new()
                 {
-                    Id = 0,
+                    Id = 0L,
                     Name = "Text",
                     Description = null,
                     Regex = "\\w+",

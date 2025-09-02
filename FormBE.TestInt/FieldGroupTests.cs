@@ -8,17 +8,6 @@ namespace FormBE.TestInt;
 
 public sealed class FieldGroupTests(WebApiTestFixture webApiTestFixture) : WebApiTestBase(webApiTestFixture)
 {
-    private static void ShouldBeSameProperties(FieldGroupDto response, FieldGroupRequest request)
-    {
-        response.Name.Should().Be(request.Name);
-        response.Fields.Should().NotBeEmpty()
-                .And.HaveCount(1)
-                .And.ContainSingle(f => f.Id == request.FieldIds[0]);
-        response.SingleChoiceFields.Should().NotBeEmpty()
-                .And.HaveCount(1)
-                .And.ContainSingle(f => f.Id == request.SingleChoiceFieldIds[0]);
-    }
-    
     [Fact]
     public async Task GetAllFieldGroups_CheckExistence_Success()
     {
@@ -49,7 +38,7 @@ public sealed class FieldGroupTests(WebApiTestFixture webApiTestFixture) : WebAp
             await ctx.SaveChangesAsync(TestCancellationToken);
         });
 
-        var response = await ApiClient.GetAsync("/api/fieldGroups", TestCancellationToken);
+        var response = await ApiClient.GetAsync("/api/field-groups", TestCancellationToken);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var content
@@ -63,24 +52,18 @@ public sealed class FieldGroupTests(WebApiTestFixture webApiTestFixture) : WebAp
     [Fact]
     public async Task CreateFieldGroup_CheckExistence_Success()
     {
-        const long Id = 1L;
-        FieldGroupRequest request = new FieldGroupRequest()
-        {
-            Name = "Location",
-            SingleChoiceFieldIds = [1L],
-            FieldIds = [1L]
-        };
-
+        long scfId = 0L;
+        long fId = 0L;
+        
         await ModifyDatabaseContentAsync(async ctx =>
         {
-            ctx.SingleChoiceFields.Add(new SingleChoiceField()
+            var scf = new SingleChoiceField()
             {
                 Name = "Living",
                 FieldGroupSingleChoiceFields = [],
                 Options = [],
-            });
-
-            ctx.Fields.Add(new Field()
+            };
+            var f = new Field()
             {
                 Name = "Postal Code",
                 Description = null,
@@ -95,60 +78,72 @@ public sealed class FieldGroupTests(WebApiTestFixture webApiTestFixture) : WebAp
                 FieldGroupFields = [],
                 FieldResponses = [],
                 OptionFields = []
-            });
+            };
+            
+            ctx.SingleChoiceFields.Add(scf);
+
+            ctx.Fields.Add(f);
 
             await ctx.SaveChangesAsync(TestCancellationToken);
-        });
 
-        var response = await ApiClient.PostAsJsonAsync("/api/fieldGroups", request, JsonOptions, TestCancellationToken);
+            scfId = scf.Id;
+            fId = f.Id;
+        });
+        
+        FieldGroupCreationRequest request = new FieldGroupCreationRequest()
+        {
+            Name = "Location",
+            SingleChoiceFieldIds = [scfId],
+            FieldIds = [fId]
+        };
+
+        var response = await ApiClient.PostAsJsonAsync("/api/field-groups", request, JsonOptions, TestCancellationToken);
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         response.Headers.Location.Should().NotBeNull();
-        response.Headers.Location.AbsolutePath.Should().Be($"/api/fieldGroups/{Id}");
+        response.Headers.Location.AbsolutePath.Should().StartWith("/api/field-groups/");
 
         var content = await response.Content.ReadFromJsonAsync<FieldGroupDto>(JsonOptions, TestCancellationToken);
 
         content.Should().NotBeNull();
         ShouldBeSameProperties(content, request);
 
-        var getResponse = await ApiClient.GetAsync($"/api/fieldGroups/{Id}", TestCancellationToken);
+        var getResponse = await ApiClient.GetAsync(response.Headers.Location.AbsolutePath, TestCancellationToken);
 
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var getContent = await getResponse.Content.ReadFromJsonAsync<FieldGroupDto>(JsonOptions, TestCancellationToken);
 
         getContent.Should().NotBeNull();
         ShouldBeSameProperties(getContent, request);
+        
+        static void ShouldBeSameProperties(FieldGroupDto response, FieldGroupCreationRequest request)
+        {
+            response.Name.Should().Be(request.Name);
+            response.Fields.Should().NotBeEmpty()
+                    .And.HaveCount(1)
+                    .And.ContainSingle(f => f.Id == request.FieldIds[0]);
+            response.SingleChoiceFields.Should().NotBeEmpty()
+                    .And.HaveCount(1)
+                    .And.ContainSingle(f => f.Id == request.SingleChoiceFieldIds[0]);
+        }
     }
 
     [Fact]
     public async Task UpdateFieldGroup_CheckChange_Success()
     {
-        const long Id = 1L;
-        FieldGroupRequest request = new FieldGroupRequest()
-        {
-            Name = "Location",
-            SingleChoiceFieldIds = [1L],
-            FieldIds = [1L]
-        };
+        long fieldGroupId = 0L;
+        long scfId = 0L;
+        long fId = 0L;
 
         await ModifyDatabaseContentAsync(async ctx =>
         {
-            ctx.SingleChoiceFields.Add(new SingleChoiceField()
+            var scf = new SingleChoiceField()
             {
                 Name = "Living",
                 FieldGroupSingleChoiceFields = [],
                 Options = [],
-            });
-
-            ctx.FieldGroups.Add(new FieldGroup()
-            {
-                Name = "Postal Code",
-                FormFieldGroups = [],
-                FieldGroupSingleChoiceFields = [],
-                FieldGroupFields = []
-            });
-
-            ctx.Fields.Add(new Field()
+            };
+            var f = new Field()
             {
                 Name = "Postal Code",
                 Description = null,
@@ -163,50 +158,85 @@ public sealed class FieldGroupTests(WebApiTestFixture webApiTestFixture) : WebAp
                 FieldGroupFields = [],
                 FieldResponses = [],
                 OptionFields = []
-            });
+            };
+            var fg = new FieldGroup()
+            {
+                Name = "Postal Code",
+                FormFieldGroups = [],
+                FieldGroupSingleChoiceFields = [],
+                FieldGroupFields = []
+            };
+            
+            ctx.SingleChoiceFields.Add(scf);
+
+            ctx.FieldGroups.Add(fg);
+
+            ctx.Fields.Add(f);
 
             await ctx.SaveChangesAsync(TestCancellationToken);
+
+            fieldGroupId = fg.Id;
+            scfId = scf.Id;
+            fId = f.Id;
         });
+        
+        FieldGroupUpdateRequest request = new FieldGroupUpdateRequest()
+        {
+            Name = "Location",
+            SingleChoiceFieldIds = [scfId],
+            FieldIds = [fId]
+        };
 
         var response
-            = await ApiClient.PutAsJsonAsync($"/api/fieldGroups/{Id}", request, JsonOptions, TestCancellationToken);
+            = await ApiClient.PutAsJsonAsync($"/api/field-groups/{fieldGroupId}", request, JsonOptions, TestCancellationToken);
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
         response.Content.Headers.Should().BeEmpty();
 
-        var getResponse = await ApiClient.GetAsync($"/api/fieldGroups/{Id}", TestCancellationToken);
+        var getResponse = await ApiClient.GetAsync($"/api/field-groups/{fieldGroupId}", TestCancellationToken);
 
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var getContent = await getResponse.Content.ReadFromJsonAsync<FieldGroupDto>(JsonOptions, TestCancellationToken);
 
         getContent.Should().NotBeNull();
-        ShouldBeSameProperties(getContent, request);
+        
+        getContent.Name.Should().Be(request.Name);
+        getContent.Fields.Should().NotBeEmpty()
+                  .And.HaveCount(1)
+                  .And.ContainSingle(f => f.Id == request.FieldIds[0]);
+        getContent.SingleChoiceFields.Should().NotBeEmpty()
+                  .And.HaveCount(1)
+                  .And.ContainSingle(f => f.Id == request.SingleChoiceFieldIds[0]);
     }
 
     [Fact]
     public async Task DeleteFieldGroup_CheckExistence_Success()
     {
-        const long Id = 1L;
+        long id = 1L;
         
         await ModifyDatabaseContentAsync(async ctx =>
         {
-            ctx.FieldGroups.Add(new FieldGroup()
+            var fg = new FieldGroup()
             {
                 Name = "Living Conditions",
                 FormFieldGroups = [],
                 FieldGroupSingleChoiceFields = [],
                 FieldGroupFields = []
-            });
+            };
+            
+            ctx.FieldGroups.Add(fg);
 
             await ctx.SaveChangesAsync(TestCancellationToken);
+
+            id = fg.Id;
         });
 
-        var response = await ApiClient.DeleteAsync($"/api/fieldGroups/{Id}", TestCancellationToken);
+        var response = await ApiClient.DeleteAsync($"/api/field-groups/{id}", TestCancellationToken);
         
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
         response.Content.Headers.Should().BeEmpty();
         
-        var getResponse = await ApiClient.GetAsync($"/api/fieldGroups/{Id}", TestCancellationToken);
+        var getResponse = await ApiClient.GetAsync($"/api/field-groups/{id}", TestCancellationToken);
         
         getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }

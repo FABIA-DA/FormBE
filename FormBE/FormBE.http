@@ -1,27 +1,215 @@
 @Host = http://localhost:5200
+@FieldTypes = {{Host}}/api/field-types
+@Fields = {{Host}}/api/fields
+@FieldResponses = {{Host}}/api/field-responses
+@SingleChoiceFields = {{Host}}/api/single-choice-fields
+@OptionResponses = {{Host}}/api/option-responses
+@FieldGroups = {{Host}}/api/field-groups
+@Forms = {{Host}}/api/forms
+@Groups = {{Host}}/api/groups
 
 # Execute in order for variables (with IDs) to work correctly
 
-### Add rocket
-POST {{Host}}/api/rockets
+### Add field type
+POST {{FieldTypes}}
 Content-Type: application/json
 
 {
-    "modelName": "Ariane 5",
-    "manufacturer": "Arianespace",
-    "maxThrust": "13700000",
-    "payloadDeltaV": "205800000"
+    "name": "Digit",
+    "description": null,
+    "regex": "\\d"
 }
 
-> {%
-    client.global.set("rocketId", response.body.id);
+> {% 
+    client.global.set("fieldTypeId", response.body.id); 
 %}
 
-### Get rocket by ID
-GET {{Host}}/api/rockets/{{rocketId}}
+### Add field
+POST {{Fields}}
+Content-Type: application/json
 
-### Get all rockets
-GET {{Host}}/api/rockets
+{
+    "fieldTypeId": {{fieldTypeId}},
+    "name": "Number of Employees",
+    "description": null,
+    "isOptional": false
+}
 
-### Delete rocket
-DELETE {{Host}}/api/rockets/{{rocketId}}
+> {% 
+    client.global.set("fieldId", response.body.id); 
+%}
+
+### Add field response
+POST {{FieldResponses}}
+Content-Type: application/json
+
+{
+    "fieldId": {{fieldId}},
+    "telephoneNumber": "1000",
+    "value": "4"
+}
+
+> {% 
+    client.global.set("fieldResponseId", response.body.id); 
+%}
+
+### Add single choice field
+POST {{SingleChoiceFields}}
+Content-Type: application/json
+
+{
+    "name": "Business Condition",
+    "options": [
+        {
+            "name": "AG",
+            "fieldIds": [
+                {{fieldId}}
+            ]
+        },
+        {
+            "name": "GmbH",
+            "fieldIds": []
+        }
+    ]
+}
+
+> {% 
+    client.global.set("singleChoiceFieldId", response.body.id); 
+    client.global.set("optionId", response.body.options[0].id)
+%}
+
+### Add option response
+POST {{OptionResponses}}
+Content-Type: application/json
+
+{
+    "optionId": {{optionId}},
+    "telephoneNumber": "1000"
+}
+
+> {% 
+    client.global.set("optionResponseId", response.body.id)
+%}
+
+### Add field group
+POST {{FieldGroups}}
+Content-Type: application/json
+
+{
+    "name": "Business Things",
+    "singleChoiceFieldIds": [
+        {{singleChoiceFieldId}}
+    ],
+    "fieldIds": [
+        {{fieldId}}
+    ]
+}
+
+> {% 
+    client.global.set("fieldGroupId", response.body.id)
+%}
+
+### Add form
+POST {{Forms}}
+Content-Type: application/json
+
+{
+    "name": "Business Type",
+    "groupId": null,
+    "fieldGroupIds": [
+        {{fieldGroupId}}
+    ]
+}
+
+> {% 
+    client.global.set("formId", response.body.id) 
+%}
+
+### Add group
+POST {{Groups}}
+Content-Type: application/json
+
+{
+    "name": "Business",
+    "parentId": null,
+    "groupIds": [],
+    "formIds": [
+        {{formId}}
+    ]
+}
+
+> {% 
+    client.global.set("groupId", response.body.id) 
+%}
+
+### Get field type
+GET {{FieldTypes}}/{{fieldTypeId}}
+
+### Get field
+GET {{Fields}}/{{fieldId}}
+
+### Get field response
+GET {{FieldResponses}}/{{fieldResponseId}}
+
+### Get single choice field
+GET {{SingleChoiceFields}}/{{singleChoiceFieldId}}
+
+### Get option response
+GET {{OptionResponses}}/{{optionResponseId}}
+
+### Get field group
+GET {{FieldGroups}}/{{fieldGroupId}}
+
+### Get form
+GET {{Forms}}/{{formId}}
+
+### Get group
+GET {{Groups}}/{{groupId}}
+
+### Get all field types
+GET {{FieldTypes}}
+
+### Get all fields
+GET {{Fields}}
+
+### Get all field responses
+GET {{FieldResponses}}
+
+### Get all single choice fields
+GET {{SingleChoiceFields}}
+
+### Get all option responses
+GET {{OptionResponses}}
+
+### Get all field groups
+GET {{FieldGroups}}
+
+### Get all forms
+GET {{Forms}}
+
+### Get all groups
+GET {{Groups}}
+
+### Delete field type
+DELETE {{FieldTypes}}/{{fieldTypeId}}
+
+### Delete field
+DELETE {{Fields}}/{{fieldId}}
+
+### Delete field response
+DELETE {{FieldResponses}}/{{fieldResponseId}}
+
+### Delete single choice field
+DELETE {{SingleChoiceFields}}/{{singleChoiceFieldId}}
+
+### Delete option response
+DELETE {{OptionResponses}}/{{optionResponseId}}
+
+### Delete field group
+DELETE {{FieldGroups}}/{{fieldGroupId}}
+
+### Delete form
+DELETE {{Forms}}/{{formId}}
+
+### Delete group
+DELETE {{Groups}}/{{groupId}}

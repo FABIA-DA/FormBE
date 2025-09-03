@@ -67,7 +67,7 @@ public sealed class GroupController(
 
         await transaction.BeginTransactionAsync(cancellationToken);
 
-        var result = await groupService.CreateGroupAsync(request.ParentId, request.Name, request.GroupIds,
+        var result = await groupService.CreateGroupAsync(request.ParentId, request.Name, request.SubgroupIds,
                                                          request.FormIds, cancellationToken);
 
         return await result.Match<ValueTask<ActionResult<GroupDto>>>(async success =>
@@ -92,6 +92,7 @@ public sealed class GroupController(
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async ValueTask<IActionResult> UpdateGroupById(
         [FromRoute] long id,
         [FromBody] GroupUpdateRequest request,
@@ -113,7 +114,7 @@ public sealed class GroupController(
 
         await transaction.BeginTransactionAsync(cancellationToken);
 
-        var result = await groupService.UpdateGroupAsync(id, request.ParentId, request.Name, request.SubGroupIds,
+        var result = await groupService.UpdateGroupAsync(id, request.ParentId, request.Name, request.SubgroupIds,
                                                          request.FormIds, cancellationToken);
 
         return await result.Match<ValueTask<IActionResult>>(async success =>
@@ -130,7 +131,7 @@ public sealed class GroupController(
                                                             parentIsSelf =>
                                                                 ValueTask
                                                                     .FromResult<
-                                                                        IActionResult>(BadRequest("Parent group can't be the group itself")));
+                                                                        IActionResult>(Conflict("Parent group can't be the group itself")));
     }
 
     [HttpDelete]
@@ -171,7 +172,7 @@ public sealed class GroupCreationRequest
 {
     public required string Name { get; set; }
     public long? ParentId { get; set; }
-    public required List<long> GroupIds { get; set; }
+    public required List<long> SubgroupIds { get; set; }
     public required List<long> FormIds { get; set; }
 
     public sealed class Validator : AbstractValidator<GroupCreationRequest>
@@ -180,7 +181,7 @@ public sealed class GroupCreationRequest
         {
             RuleFor(x => x.Name).NotNull().NotEmpty();
             When(x => x.ParentId != null, () => { RuleFor(x => x.ParentId).GreaterThan(0L); });
-            RuleFor(x => x.GroupIds).NotNull();
+            RuleFor(x => x.SubgroupIds).NotNull();
             RuleFor(x => x.FormIds).NotNull();
         }
     }
@@ -190,7 +191,7 @@ public sealed class GroupUpdateRequest
 {
     public required string Name { get; set; }
     public long? ParentId { get; set; }
-    public required List<long> SubGroupIds { get; set; }
+    public required List<long> SubgroupIds { get; set; }
     public required List<long> FormIds { get; set; }
 
     public sealed class Validator : AbstractValidator<GroupUpdateRequest>
@@ -199,7 +200,7 @@ public sealed class GroupUpdateRequest
         {
             RuleFor(x => x.Name).NotNull().NotEmpty();
             When(x => x.ParentId != null, () => { RuleFor(x => x.ParentId).GreaterThan(0L); });
-            RuleFor(x => x.SubGroupIds).NotNull();
+            RuleFor(x => x.SubgroupIds).NotNull();
             RuleFor(x => x.FormIds).NotNull();
         }
     }

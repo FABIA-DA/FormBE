@@ -106,7 +106,7 @@ public class SingleChoiceFieldTests(WebApiTestFixture webApiTestFixture) : WebAp
                     Name = "AG",
                     FieldIds = [fieldId1]
                 },
-                new NewOptions()
+                new NewOption()
                 {
                     Name = "GmbH",
                     FieldIds = [fieldId2]
@@ -212,7 +212,7 @@ public class SingleChoiceFieldTests(WebApiTestFixture webApiTestFixture) : WebAp
         {
             Name = "Housing Conditions",
             OldOptions = [new() { Id = 1L, Name = "Homestead", FieldIds = [fieldId1] }],
-            NewOptions = [new NewOptions() { Name = "Flat", FieldIds = [fieldId2] }]
+            NewOptions = [new NewOption() { Name = "Flat", FieldIds = [fieldId2] }]
         };
 
         var response

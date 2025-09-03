@@ -110,7 +110,7 @@ public sealed class GroupTests(WebApiTestFixture webApiTestFixture) :
         {
             Name = "Sport Events",
             ParentId = parentId,
-            GroupIds = [subgroupId],
+            SubgroupIds = [subgroupId],
             FormIds = [formId]
         };
 
@@ -141,7 +141,7 @@ public sealed class GroupTests(WebApiTestFixture webApiTestFixture) :
         {
             response.Name.Should().Be(request.Name);
             response.ParentId.Should().Be(request.ParentId);
-            response.SubGroups.Should().ContainSingle(g => g.Id == request.GroupIds[0]);
+            response.SubGroups.Should().ContainSingle(g => g.Id == request.SubgroupIds[0]);
             response.Forms.Should().ContainSingle(g => g.Id == request.FormIds[0]);
         }
     }
@@ -204,7 +204,7 @@ public sealed class GroupTests(WebApiTestFixture webApiTestFixture) :
         {
             Name = "Sport Events",
             ParentId = parentId,
-            SubGroupIds = [subgroupId],
+            SubgroupIds = [subgroupId],
             FormIds = [formId]
         };
 

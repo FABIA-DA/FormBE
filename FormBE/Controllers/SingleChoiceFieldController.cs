@@ -149,11 +149,11 @@ public sealed class SingleChoiceFieldController(
         }, notFound => ValueTask.FromResult<IActionResult>(NotFound()));
     }
 
-    private static List<(string Name, List<long> FieldIds)> NewOptionsToTuples(IEnumerable<NewOptions> options) =>
+    private static List<(string Name, List<long> FieldIds)> NewOptionsToTuples(IEnumerable<NewOption> options) =>
         options.Select(o => (o.Name, o.FieldIds)).ToList();
 
     private static List<(long Id, string Name, List<long> FieldIds)>
-        OldOptionsToTuples(IEnumerable<OldOptions> options) =>
+        OldOptionsToTuples(IEnumerable<OldOption> options) =>
         options.Select(o => (o.Id, o.Name, o.FieldIds)).ToList();
 }
 
@@ -162,13 +162,13 @@ public sealed class SingleChoiceFieldListResponse
     public required List<SingleChoiceFieldDto> Fields { get; set; }
 }
 
-public sealed class NewOptions
+public sealed class NewOption
 {
     public required string Name { get; set; }
     public required List<long> FieldIds { get; set; }
 }
 
-public sealed class OldOptions
+public sealed class OldOption
 {
     public long Id { get; set; }
     public required string Name { get; set; }
@@ -178,7 +178,7 @@ public sealed class OldOptions
 public sealed class SingleChoiceFieldCreationRequest
 {
     public required string Name { get; set; }
-    public required List<NewOptions> Options { get; set; }
+    public required List<NewOption> Options { get; set; }
 
     public sealed class Validator : AbstractValidator<SingleChoiceFieldCreationRequest>
     {
@@ -193,8 +193,8 @@ public sealed class SingleChoiceFieldCreationRequest
 public sealed class SingleChoiceFieldUpdateRequest
 {
     public required string Name { get; set; }
-    public required List<OldOptions> OldOptions { get; set; }
-    public required List<NewOptions> NewOptions { get; set; }
+    public required List<OldOption> OldOptions { get; set; }
+    public required List<NewOption> NewOptions { get; set; }
 
     public sealed class Validator : AbstractValidator<SingleChoiceFieldUpdateRequest>
     {

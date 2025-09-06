@@ -71,7 +71,8 @@ internal class GroupRepository(DbSet<Group> groups) : IGroupRepository
     {
         IQueryable<Group> query = NoTracking;
         
-        IReadOnlyCollection<Group> coll = await query.ToListAsync(cancellationToken);
+        IReadOnlyCollection<Group> coll = await query.Include(g => g.Parent)
+                                                     .ToListAsync(cancellationToken);
 
         return coll;
     }

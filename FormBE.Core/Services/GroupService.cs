@@ -96,6 +96,13 @@ internal class GroupService(
         long? parentGroupId, string name, List<long> subGroupIds,  List<long> formIds,
         CancellationToken cancellationToken = default)
     {
+        Group group = new()
+        {
+            Name = name,
+            SubGroups = [],
+            Forms = []
+        };
+        
         if (parentGroupId.HasValue)
         {
             Group? parent = await GroupRepository.GetGroupByIdAsync(parentGroupId.Value, false, cancellationToken);
@@ -106,19 +113,17 @@ internal class GroupService(
 
                 return new IGroupService.ParentNotFound();
             }
+
+            group.ParentId = parent.Id;
+            group.Parent = parent;
         }
         
         IReadOnlyCollection<Group> subgroups = subGroupIds.Count == 0 ? [] : await GroupRepository.GetGroupsByIdsAsync(cancellationToken, subGroupIds);
 
         IReadOnlyCollection<Form> forms = formIds.Count == 0 ? [] : await FormRepository.GetFormsByIdsAsync(cancellationToken, formIds);
-        
-        Group group = new()
-        {
-            ParentId = parentGroupId,
-            Name = name,
-            SubGroups = subgroups.ToList(),
-            Forms = forms.ToList()
-        };
+
+        group.SubGroups = subgroups.ToList();
+        group.Forms = forms.ToList();
 
         GroupRepository.AddGroup(group);
         await uow.SaveChangesAsync(cancellationToken);

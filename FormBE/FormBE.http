@@ -132,7 +132,7 @@ Content-Type: application/json
 {
     "name": "Business",
     "parentId": null,
-    "groupIds": [],
+    "subgroupIds": [],
     "formIds": [
         {{formId}}
     ]

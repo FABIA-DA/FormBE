@@ -12,6 +12,14 @@ public static class SingleChoiceFieldExtension
             Options = self.Options.Select(ToDto).ToList()
         };
 
+    public static SingleChoiceFieldListDto ToListDto(this SingleChoiceField self) =>
+        new SingleChoiceFieldListDto()
+        {
+            Id = self.Id,
+            Name = self.Name,
+            OptionCount = self.Options.Count
+        };
+
     private static OptionDto ToDto(this Option self) =>
         new OptionDto()
         {
@@ -35,4 +43,11 @@ public sealed class OptionDto
     public long SingleChoiceFieldId { get; set; }
     public required string Name { get; set; }
     public required List<FieldDto> Fields { get; set; }
+}
+
+public sealed class SingleChoiceFieldListDto
+{
+    public long Id { get; set; }
+    public required string Name { get; set; }
+    public int OptionCount { get; set; }
 }

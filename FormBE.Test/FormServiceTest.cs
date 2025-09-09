@@ -87,7 +87,15 @@ public class FormServiceTest
     [InlineData(0L, "Small Business Form")]
     public async Task CreateFormAsync_Success(long? groupId, string name)
     {
-        List<FieldGroup> fieldGroups = Util.GetTestFieldGroups();
+        List<(long Id, string Name, int SingleChoiceFieldCount, int FieldCount)> fieldGroups = Util.GetTestFieldGroups();
+        List<FieldGroup> testFieldGroups = fieldGroups.Select(fg => new FieldGroup()
+        {
+            Id = fg.Id,
+            Name = fg.Name,
+            FormFieldGroups = [],
+            FieldGroupSingleChoiceFields = [],
+            FieldGroupFields = []
+        }).ToList();
         List<long> fieldGroupIds = fieldGroups.GetIds();
 
         if (groupId.HasValue)
@@ -104,7 +112,7 @@ public class FormServiceTest
         }
 
         _mockFieldGroupRepository.GetFieldGroupsByIdsAsync(TestContext.Current.CancellationToken, fieldGroupIds)
-                                 .Returns(fieldGroups);
+                                 .Returns(testFieldGroups);
 
         OneOf<Success<Form>, IFormService.GroupNotFound> result
             = await _formService.CreateFormAsync(groupId, name, fieldGroupIds, TestContext.Current.CancellationToken);
@@ -144,7 +152,15 @@ public class FormServiceTest
     [InlineData(1L, "Space Form")]
     public async Task UpdateFormAsync_Success(long? newGroupId, string newName)
     {
-        List<FieldGroup> fieldGroups = Util.GetTestFieldGroups();
+        List<(long Id, string Name, int SingleChoiceFieldCount, int FieldCount)> fieldGroups = Util.GetTestFieldGroups();
+        List<FieldGroup> testFieldGroups = fieldGroups.Select(fg => new FieldGroup()
+        {
+            Id = fg.Id,
+            Name = fg.Name,
+            FormFieldGroups = [],
+            FieldGroupSingleChoiceFields = [],
+            FieldGroupFields = []
+        }).ToList();
         List<long> fieldGroupIds = fieldGroups.GetIds();
 
         Form testForm = new()
@@ -156,7 +172,7 @@ public class FormServiceTest
             FormFieldGroups = []
         };
 
-        testForm.FormFieldGroups = fieldGroups.Take(2).Select(g => new FormFieldGroup()
+        testForm.FormFieldGroups = testFieldGroups.Take(2).Select(g => new FormFieldGroup()
         {
             FormId = testForm.Id,
             FieldGroupId = g.Id,
@@ -170,7 +186,7 @@ public class FormServiceTest
                            .Returns(testForm);
         _mockFieldGroupRepository
             .GetFieldGroupsByIdsAsync(TestContext.Current.CancellationToken,
-                                      Arg.Is<List<long>>(ids => ids.SequenceEqual(fieldGroupIds))).Returns(fieldGroups);
+                                      Arg.Is<List<long>>(ids => ids.SequenceEqual(fieldGroupIds))).Returns(testFieldGroups);
 
         if (newGroupId.HasValue)
         {

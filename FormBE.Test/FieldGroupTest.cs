@@ -32,11 +32,12 @@ public class FieldGroupTest
     [Fact]
     public async Task GetFieldGroupsAsync_Success()
     {
-        IReadOnlyCollection<FieldGroup> testFieldGroups = Util.GetTestFieldGroups();
+        IReadOnlyCollection<(long Id, string Name, int SingleChoiceFieldCount, int FieldCount)> testFieldGroups
+            = Util.GetTestFieldGroups();
 
         _mockFieldGroupRepository.GetFieldGroupsAsync(TestContext.Current.CancellationToken).Returns(testFieldGroups);
 
-        IReadOnlyCollection<FieldGroup> result
+        IReadOnlyCollection<(long Id, string Name, int SingleChoiceFieldCount, int FieldCount)> result
             = await _fieldGroupService.GetFieldGroupsAsync(TestContext.Current.CancellationToken);
 
         result.Count.Should().Be(testFieldGroups.Count, "should have same count");
@@ -132,13 +133,14 @@ public class FieldGroupTest
             FieldGroupSingleChoiceFields = []
         };
 
-        testFieldGroup.FieldGroupSingleChoiceFields = singleChoiceFields.Take(2).Select(f => new FieldGroupSingleChoiceField()
-        {
-            FieldGroup = testFieldGroup,
-            SingleChoiceField = f
-        }).ToList();
+        testFieldGroup.FieldGroupSingleChoiceFields = singleChoiceFields.Take(2)
+                                                                        .Select(f => new FieldGroupSingleChoiceField()
+                                                                        {
+                                                                            FieldGroup = testFieldGroup,
+                                                                            SingleChoiceField = f
+                                                                        }).ToList();
         singleChoiceFieldIds = singleChoiceFieldIds.Skip(2).ToList();
-        
+
         testFieldGroup.FieldGroupFields = fields.Take(2).Select(f => new FieldGroupField()
         {
             FieldGroup = testFieldGroup,
@@ -149,9 +151,12 @@ public class FieldGroupTest
         _mockFieldGroupRepository.GetFieldGroupByIdAsync(testFieldGroup.Id, true, TestContext.Current.CancellationToken)
                                  .Returns(testFieldGroup);
         _mockSingleChoiceFieldRepository
-            .GetSingleChoiceFieldsByIdsAsync(TestContext.Current.CancellationToken, Arg.Is<List<long>>(list => list.SequenceEqual(singleChoiceFieldIds)))
+            .GetSingleChoiceFieldsByIdsAsync(TestContext.Current.CancellationToken,
+                                             Arg.Is<List<long>>(list => list.SequenceEqual(singleChoiceFieldIds)))
             .Returns(singleChoiceFields);
-        _mockFieldRepository.GetFieldsByIdsAsync(TestContext.Current.CancellationToken, Arg.Is<List<long>>(list => list.SequenceEqual(fieldIds))).Returns(fields);
+        _mockFieldRepository.GetFieldsByIdsAsync(TestContext.Current.CancellationToken,
+                                                 Arg.Is<List<long>>(list => list.SequenceEqual(fieldIds)))
+                            .Returns(fields);
 
         OneOf<Success, NotFound> result
             = await _fieldGroupService.UpdateFieldGroupAsync(testFieldGroup.Id, "New Test Name", singleChoiceFieldIds,
@@ -168,10 +173,10 @@ public class FieldGroupTest
     public async Task UpdateFieldGroupAsync_NotFound()
     {
         const long TestFieldGroupId = 0;
-        
+
         _mockFieldGroupRepository.GetFieldGroupByIdAsync(TestFieldGroupId, true, TestContext.Current.CancellationToken)
-                                 .Returns((FieldGroup?)null);
-        
+                                 .Returns((FieldGroup?) null);
+
         OneOf<Success, NotFound> result
             = await _fieldGroupService.UpdateFieldGroupAsync(TestFieldGroupId, "New Test Name", [],
                                                              [], TestContext.Current.CancellationToken);
@@ -212,9 +217,9 @@ public class FieldGroupTest
     public async Task DeleteFieldGroupAsync_NotFound()
     {
         const long TestFieldGroupId = 0;
-        
+
         _mockFieldGroupRepository.GetFieldGroupByIdAsync(TestFieldGroupId, true, TestContext.Current.CancellationToken)
-                                 .Returns((FieldGroup?)null);
+                                 .Returns((FieldGroup?) null);
 
         OneOf<Success, NotFound> result
             = await _fieldGroupService.DeleteFieldGroupAsync(TestFieldGroupId, TestContext.Current.CancellationToken);

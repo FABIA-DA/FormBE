@@ -16,14 +16,14 @@ public sealed class FormController(
 {
     [HttpGet]
     [Route("")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async ValueTask<ActionResult> GetAllForms(CancellationToken cancellationToken = default)
+    [ProducesResponseType<FormListResponse>(StatusCodes.Status200OK)]
+    public async ValueTask<ActionResult<FormListResponse>> GetAllForms(CancellationToken cancellationToken = default)
     {
         var list = await formService.GetFormsAsync(cancellationToken);
 
         return Ok(new FormListResponse()
         {
-            Forms = list.Select(FormExtension.ToDto).ToList()
+            Forms = list.Select(FormExtension.ToListDto).ToList()
         });
     }
 
@@ -159,7 +159,7 @@ public sealed class FormController(
 
 public sealed class FormListResponse
 {
-    public required List<FormDto> Forms { get; set; }
+    public required List<FormListDto> Forms { get; set; }
 }
 
 public sealed class FormCreationRequest

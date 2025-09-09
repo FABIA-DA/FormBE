@@ -13,8 +13,8 @@ public interface IFieldGroupService
     /// Get all <see cref="FieldGroup"/>s.
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="IReadOnlyCollection{T}"/> of <see cref="FieldGroup"/>s.</returns>
-    public ValueTask<IReadOnlyCollection<FieldGroup>>
+    /// <returns>A <see cref="IReadOnlyCollection{T}"/> of with values of a <see cref="FieldGroup"/> but special for a list representation.</returns>
+    public ValueTask<IReadOnlyCollection<(long Id, string Name, int SingleChoiceFieldCount, int FieldCount)>>
         GetFieldGroupsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -70,7 +70,7 @@ internal class FieldGroupService(
     private ISingleChoiceFieldRepository SingleChoiceFieldRepository => uow.SingleChoiceFieldRepository;
     private IFieldRepository FieldRepository => uow.FieldRepository;
     
-    public async ValueTask<IReadOnlyCollection<FieldGroup>>
+    public async ValueTask<IReadOnlyCollection<(long Id, string Name, int SingleChoiceFieldCount, int FieldCount)>>
         GetFieldGroupsAsync(CancellationToken cancellationToken = default) =>
         await FieldGroupRepository.GetFieldGroupsAsync(cancellationToken);
 

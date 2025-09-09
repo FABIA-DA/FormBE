@@ -11,19 +11,26 @@ public static class GroupExtension
             ParentId = self.ParentId,
             Name = self.Name,
             ParentName = self.Parent?.Name,
-            SubGroups = self.SubGroups.Select(g => SubGroupToDto(g, self.Id, self.Name)).ToList(),
+            Subgroups = self.SubGroups.Select(SubGroupToDto).ToList(),
             Forms = self.Forms.Select(f => f.ToFormDto(self.Id)).ToList()
         };
 
-    private static GroupDto SubGroupToDto(this Group self, long parentId, string parentName) =>
-        new GroupDto()
+    public static GroupListDto ToListDto(this Group self) =>
+        new GroupListDto()
         {
             Id = self.Id,
-            ParentId = parentId,
+            ParentId = self.ParentId,
             Name = self.Name,
-            ParentName = parentName,
-            SubGroups = [],
-            Forms = []
+            ParentName = self.Parent?.Name,
+            SubgroupCount = self.SubGroups.Count,
+            FormCount = self.Forms.Count,
+        };
+
+    private static SubgroupDto SubGroupToDto(this Group self) =>
+        new SubgroupDto()
+        {
+            Id = self.Id,
+            Name = self.Name
         };
 
     private static FormDto ToFormDto(this Form self, long groupId) =>
@@ -43,6 +50,22 @@ public sealed class GroupDto
     public long? ParentId { get; set; }
     public required string Name { get; set; }
     public string? ParentName { get; set; }
-    public required List<GroupDto> SubGroups { get; set; }
+    public required List<SubgroupDto> Subgroups { get; set; }
     public required List<FormDto> Forms { get; set; }
+}
+
+public sealed class SubgroupDto
+{
+    public long Id { get; set; }
+    public required string Name { get; set; }
+}
+
+public sealed class GroupListDto
+{
+    public long Id { get; set; }
+    public long? ParentId { get; set; }
+    public required string Name { get; set; }
+    public string? ParentName { get; set; }
+    public int SubgroupCount { get; set; }
+    public int FormCount { get; set; }
 }

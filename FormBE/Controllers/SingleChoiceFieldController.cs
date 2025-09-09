@@ -25,7 +25,7 @@ public sealed class SingleChoiceFieldController(
 
         return Ok(new SingleChoiceFieldListResponse()
         {
-            Fields = list.Select(SingleChoiceFieldExtension.ToDto).ToList()
+            Fields = list.Select(SingleChoiceFieldExtension.ToListDto).ToList()
         });
     }
 
@@ -159,7 +159,7 @@ public sealed class SingleChoiceFieldController(
 
 public sealed class SingleChoiceFieldListResponse
 {
-    public required List<SingleChoiceFieldDto> Fields { get; set; }
+    public required List<SingleChoiceFieldListDto> Fields { get; set; }
 }
 
 public sealed class NewOption

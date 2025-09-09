@@ -72,39 +72,35 @@ public static class Util
         }
     ];
 
-    public static List<FieldGroup> GetTestFieldGroups() =>
+    public static List<(long Id, string Name, int SingleChoiceFieldCount, int FieldCount)> GetTestFieldGroups() =>
     [
         new()
         {
             Id = 0L,
             Name = "Contact",
-            FormFieldGroups = [],
-            FieldGroupSingleChoiceFields = [],
-            FieldGroupFields = []
+            SingleChoiceFieldCount = 0,
+            FieldCount = 0
         },
         new()
         {
             Id = 1L,
             Name = "Details",
-            FormFieldGroups = [],
-            FieldGroupSingleChoiceFields = [],
-            FieldGroupFields = []
+            SingleChoiceFieldCount = 0,
+            FieldCount = 0
         },
         new()
         {
             Id = 2L,
             Name = "Person",
-            FormFieldGroups = [],
-            FieldGroupSingleChoiceFields = [],
-            FieldGroupFields = []
+            SingleChoiceFieldCount = 0,
+            FieldCount = 0
         },
         new()
         {
             Id = 3L,
             Name = "Work-Related",
-            FormFieldGroups = [],
-            FieldGroupSingleChoiceFields = [],
-            FieldGroupFields = []
+            SingleChoiceFieldCount = 0,
+            FieldCount = 0
         }
     ];
 
@@ -140,7 +136,8 @@ public static class Util
         }
     ];
 
-    public static List<Field> GetTestFields() => [
+    public static List<Field> GetTestFields() =>
+    [
         new()
         {
             Id = 0L,
@@ -219,14 +216,16 @@ public static class Util
         }
     ];
 
-    public static List<(long Id, string Name, List<long> FieldIds)> GetTestOptions() => [
+    public static List<(long Id, string Name, List<long> FieldIds)> GetTestOptions() =>
+    [
         (0L, "Option 1", [0L, 1L]),
         (1L, "Option 2", [0L]),
         (2L, "Option 3", []),
         (3L, "Option 4", [2L, 4L])
     ];
 
-    public static List<OptionResponse> GetTestOptionResponses() => [
+    public static List<OptionResponse> GetTestOptionResponses() =>
+    [
         new()
         {
             Id = 0L,
@@ -309,7 +308,8 @@ public static class Util
         },
     ];
 
-    public static List<FieldType> GetTestFieldTypes() => [
+    public static List<FieldType> GetTestFieldTypes() =>
+    [
         new()
         {
             Id = 0L,
@@ -344,7 +344,8 @@ public static class Util
         }
     ];
 
-    public static List<FieldResponse> GetTestFieldResponses() => [
+    public static List<FieldResponse> GetTestFieldResponses() =>
+    [
         new()
         {
             Id = 0L,
@@ -355,7 +356,7 @@ public static class Util
             {
                 Id = 0L,
                 Name = "Input",
-                Description =null,
+                Description = null,
                 IsOptional = false,
                 FieldGroupFields = [],
                 FieldResponses = [],
@@ -380,7 +381,7 @@ public static class Util
             {
                 Id = 0L,
                 Name = "Input",
-                Description =null,
+                Description = null,
                 IsOptional = false,
                 FieldGroupFields = [],
                 FieldResponses = [],
@@ -405,7 +406,7 @@ public static class Util
             {
                 Id = 0L,
                 Name = "Input",
-                Description =null,
+                Description = null,
                 IsOptional = false,
                 FieldGroupFields = [],
                 FieldResponses = [],
@@ -430,7 +431,7 @@ public static class Util
             {
                 Id = 0L,
                 Name = "Input",
-                Description =null,
+                Description = null,
                 IsOptional = false,
                 FieldGroupFields = [],
                 FieldResponses = [],
@@ -446,10 +447,13 @@ public static class Util
             }
         },
     ];
-    
+
     public static List<long> GetIds(this IEnumerable<Group> coll) => coll.Select(i => i.Id).ToList();
     public static List<long> GetIds(this IEnumerable<Form> coll) => coll.Select(i => i.Id).ToList();
-    public static List<long> GetIds(this IEnumerable<FieldGroup> coll) => coll.Select(i => i.Id).ToList();
+
+    public static List<long> GetIds(
+        this IEnumerable<(long Id, string Name, int SingleChoiceFieldCount, int FieldCount)> coll) =>
+        coll.Select(i => i.Id).ToList();
 
     public static List<long> GetIds(this IEnumerable<SingleChoiceField> coll) => coll.Select(i => i.Id).ToList();
 

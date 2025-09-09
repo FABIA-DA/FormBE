@@ -26,7 +26,7 @@ public sealed class GroupController(
 
         return Ok(new GroupListResponse()
         {
-            Groups = list.Select(GroupExtension.ToDto).ToList()
+            Groups = list.Select(GroupExtension.ToListDto).ToList()
         });
     }
 
@@ -165,7 +165,7 @@ public sealed class GroupController(
 
 public sealed class GroupListResponse
 {
-    public required List<GroupDto> Groups { get; set; }
+    public required List<GroupListDto> Groups { get; set; }
 }
 
 public sealed class GroupCreationRequest

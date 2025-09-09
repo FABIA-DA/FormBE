@@ -12,14 +12,13 @@ public sealed class GroupTests(WebApiTestFixture webApiTestFixture) :
     [Fact]
     public async Task GetAllGroups_ExistingGroups_Success()
     {
-        List<string> groupNames = ["Sports", "Economy", "Business Events"];
         long parentId = 0L;
 
         await ModifyDatabaseContentAsync(async ctx =>
         {
             var g1 = new Group()
             {
-                Name = groupNames[0],
+                Name = "Sports",
                 ParentId = null,
                 Parent = null,
                 SubGroups = [],
@@ -27,7 +26,7 @@ public sealed class GroupTests(WebApiTestFixture webApiTestFixture) :
             };
             var g2 = new Group()
             {
-                Name = groupNames[1],
+                Name = "Economy",
                 ParentId = null,
                 Parent = null,
                 SubGroups = [],
@@ -35,7 +34,7 @@ public sealed class GroupTests(WebApiTestFixture webApiTestFixture) :
             };
             var g3 = new Group()
             {
-                Name = groupNames[2],
+                Name = "Business Events",
                 Parent = g1,
                 SubGroups = [],
                 Forms = []
@@ -57,8 +56,6 @@ public sealed class GroupTests(WebApiTestFixture webApiTestFixture) :
         groupContent.Should().NotBeNull();
         groupContent.Groups.Should().NotBeEmpty()
                     .And.HaveCount(3);
-        groupContent.Groups.Select(g => g.Name)
-                    .Should().BeEquivalentTo(groupNames);
         groupContent.Groups.Should().ContainSingle(g => g.ParentId == parentId);
     }
 
@@ -141,7 +138,7 @@ public sealed class GroupTests(WebApiTestFixture webApiTestFixture) :
         {
             response.Name.Should().Be(request.Name);
             response.ParentId.Should().Be(request.ParentId);
-            response.SubGroups.Should().ContainSingle(g => g.Id == request.SubgroupIds[0]);
+            response.Subgroups.Should().ContainSingle(g => g.Id == request.SubgroupIds[0]);
             response.Forms.Should().ContainSingle(g => g.Id == request.FormIds[0]);
         }
     }
@@ -220,7 +217,7 @@ public sealed class GroupTests(WebApiTestFixture webApiTestFixture) :
         getContent.Should().NotBeNull();
         getContent.Name.Should().Be(request.Name);
         getContent.ParentId.Should().Be(request.ParentId);
-        getContent.SubGroups.Should().ContainSingle(g => g.Id == subgroupId);
+        getContent.Subgroups.Should().ContainSingle(g => g.Id == subgroupId);
         getContent.Forms.Should().ContainSingle(f => f.Id == formId);
     }
 

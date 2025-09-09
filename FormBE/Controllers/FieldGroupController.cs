@@ -21,11 +21,12 @@ public sealed class FieldGroupController(
     public async ValueTask<ActionResult<FieldGroupListResponse>> GetFieldGroupList(
         CancellationToken cancellationToken = default)
     {
-        IReadOnlyCollection<FieldGroup> list = await fieldGroupService.GetFieldGroupsAsync(cancellationToken);
+        IReadOnlyCollection<(long Id, string Name, int SingleChoiceFieldCount, int FieldCount)> list
+            = await fieldGroupService.GetFieldGroupsAsync(cancellationToken);
 
         return Ok(new FieldGroupListResponse()
         {
-            FieldGroups = list.Select(FieldGroupExtension.ToDto).ToList()
+            FieldGroups = list.Select(FieldGroupExtension.ToListDto).ToList()
         });
     }
 
@@ -151,7 +152,7 @@ public sealed class FieldGroupController(
 
 public sealed class FieldGroupListResponse
 {
-    public required List<FieldGroupDto> FieldGroups { get; set; }
+    public required List<FieldGroupListDto> FieldGroups { get; set; }
 }
 
 public sealed class FieldGroupCreationRequest

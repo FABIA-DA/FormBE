@@ -22,21 +22,22 @@ public interface ISingleChoiceFieldRepository
     /// <returns>All single choice fields without tracking.</returns>
     public ValueTask<IReadOnlyCollection<SingleChoiceField>> GetSingleChoiceFieldsAsync(
         CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Get a subset of existing single choice fields with tracking.
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <param name="singleChoiceFieldIds">The ids of the single choice fields to get.</param>
     /// <returns>Gets the requested single choice fields with tracking.</returns>
-    public ValueTask<IReadOnlyCollection<SingleChoiceField>> GetSingleChoiceFieldsByIdsAsync(CancellationToken cancellationToken = default, params List<long> singleChoiceFieldIds);
+    public ValueTask<IReadOnlyCollection<SingleChoiceField>> GetSingleChoiceFieldsByIdsAsync(
+        CancellationToken cancellationToken = default, params List<long> singleChoiceFieldIds);
 
     /// <summary>
     /// Add a single choice field to the tracking of EF Core.
     /// </summary>
     /// <param name="field">The single choice field to add.</param>
     public void AddSingleChoiceField(SingleChoiceField field);
-    
+
     /// <summary>
     /// Add a single choice field to the tracking with a <see cref="EntityState.Deleted"/> state.
     /// </summary>
@@ -49,27 +50,27 @@ public interface ISingleChoiceFieldRepository
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <param name="optionIds">The ids of the options to get.</param>
     /// <returns>A <see cref="IReadOnlyCollection{Option}"/> of <see cref="Option"/>s.</returns>
-    public ValueTask<IReadOnlyCollection<Option>> GetOptionsByIdsAsync(CancellationToken cancellationToken = default, params List<long> optionIds);
-    
+    public ValueTask<IReadOnlyCollection<Option>> GetOptionsByIdsAsync(CancellationToken cancellationToken = default,
+                                                                       params List<long> optionIds);
+
     /// <summary>
     /// Begins tracking for multiple <see cref="Option"/>.
     /// </summary>
     /// <param name="newOptions">The options to be added.</param>
     public void AddOptions(params IEnumerable<Option> newOptions);
 
-    
     /// <summary>
     /// Begins to track for multiple <see cref="Option"/> with the <see cref="EntityState.Deleted"/> state.
     /// </summary>
     /// <param name="oldOptions">The options to delete.</param>
     public void RemoveOptions(params IEnumerable<Option> oldOptions);
-    
+
     /// <summary>
     /// Begins tracking for multiple <see cref="OptionField"/>.
     /// </summary>
     /// <param name="fields">The items to add.</param>
     public void AddOptionFields(params IEnumerable<OptionField> fields);
-    
+
     /// <summary>
     /// Begins tracking for multiple <see cref="OptionField"/> with the <see cref="EntityState.Deleted"/> state.
     /// </summary>
@@ -77,10 +78,20 @@ public interface ISingleChoiceFieldRepository
     public void RemoveOptionFields(params IEnumerable<OptionField> fields);
 }
 
-internal class SingleChoiceFieldRepository(DbSet<SingleChoiceField> singleChoiceFields, DbSet<Option> options, DbSet<OptionField> optionFields) : ISingleChoiceFieldRepository
+internal class SingleChoiceFieldRepository(
+    DbSet<SingleChoiceField> singleChoiceFields,
+    DbSet<Option> options,
+    DbSet<OptionField> optionFields) : ISingleChoiceFieldRepository
 {
     private IQueryable<SingleChoiceField> SingleChoiceFields => singleChoiceFields;
     private IQueryable<SingleChoiceField> NoTracking => SingleChoiceFields.AsNoTracking();
+
+    private static IQueryable<SingleChoiceField> FullInclude(IQueryable<SingleChoiceField> self) =>
+        self.Include(f => f.Options)
+            .ThenInclude(o => o.OptionFields)
+            .ThenInclude(o => o.Field)
+            .ThenInclude(o => o.FieldType)
+            .AsSplitQuery();
 
     public async ValueTask<SingleChoiceField?> GetSingleChoiceFieldByIdAsync(
         long singleChoiceFieldId, bool tracking = true,
@@ -93,12 +104,8 @@ internal class SingleChoiceFieldRepository(DbSet<SingleChoiceField> singleChoice
             query = NoTracking;
         }
 
-        SingleChoiceField? field = await query.Include(f => f.Options)
-                                              .ThenInclude(o => o.OptionFields)
-                                              .ThenInclude(o => o.Field)
-                                              .ThenInclude(o => o.FieldType)
-                                              .AsSplitQuery()
-                                              .FirstOrDefaultAsync(f => f.Id == singleChoiceFieldId, cancellationToken);
+        SingleChoiceField? field = await FullInclude(query)
+            .FirstOrDefaultAsync(f => f.Id == singleChoiceFieldId, cancellationToken);
 
         return field;
     }
@@ -113,22 +120,20 @@ internal class SingleChoiceFieldRepository(DbSet<SingleChoiceField> singleChoice
         return coll;
     }
 
-    public async ValueTask<IReadOnlyCollection<SingleChoiceField>> GetSingleChoiceFieldsByIdsAsync(CancellationToken cancellationToken = default,
-                                                                                             params List<long> singleChoiceFieldIds)
+    public async ValueTask<IReadOnlyCollection<SingleChoiceField>> GetSingleChoiceFieldsByIdsAsync(
+        CancellationToken cancellationToken = default,
+        params List<long> singleChoiceFieldIds)
     {
         if (singleChoiceFieldIds.Count == 0)
         {
             return [];
         }
-        
+
         IQueryable<SingleChoiceField> query = SingleChoiceFields.Where(f => singleChoiceFieldIds.Contains(f.Id));
-        
-        IReadOnlyCollection<SingleChoiceField> coll = await query.Include(f => f.Options)
-                                                                 .ThenInclude(o => o.OptionFields)
-                                                                 .ThenInclude(o => o.Field)
-                                                                 .AsSplitQuery()
-                                                                 .ToListAsync(cancellationToken);
-        
+
+        IReadOnlyCollection<SingleChoiceField> coll = await FullInclude(query)
+            .ToListAsync(cancellationToken);
+
         return coll;
     }
 
@@ -142,7 +147,8 @@ internal class SingleChoiceFieldRepository(DbSet<SingleChoiceField> singleChoice
         singleChoiceFields.Remove(field);
     }
 
-    public async ValueTask<IReadOnlyCollection<Option>> GetOptionsByIdsAsync(CancellationToken cancellationToken = default, params List<long> optionIds)
+    public async ValueTask<IReadOnlyCollection<Option>> GetOptionsByIdsAsync(
+        CancellationToken cancellationToken = default, params List<long> optionIds)
     {
         if (optionIds.Count == 0)
         {
@@ -152,7 +158,7 @@ internal class SingleChoiceFieldRepository(DbSet<SingleChoiceField> singleChoice
         IQueryable<Option> query = options
                                    .Include(o => o.OptionFields)
                                    .Where(o => optionIds.Contains(o.Id));
-        
+
         IReadOnlyCollection<Option> coll = await query.ToListAsync(cancellationToken);
 
         return coll;
@@ -167,7 +173,7 @@ internal class SingleChoiceFieldRepository(DbSet<SingleChoiceField> singleChoice
     {
         options.RemoveRange(oldOptions);
     }
-    
+
     public void AddOptionFields(params IEnumerable<OptionField> fields)
     {
         optionFields.AddRange(fields);

@@ -13,8 +13,9 @@ public interface IFormService
     /// Get all forms.
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="IReadOnlyCollection{T}"/> of <see cref="Form"/>s</returns>
-    public ValueTask<IReadOnlyCollection<Form>> GetFormsAsync(CancellationToken cancellationToken = default);
+    /// <returns>A <see cref="IReadOnlyCollection{T}"/> of <see cref="Form"/> with fields special for list presentation.</returns>
+    public ValueTask<IReadOnlyCollection<(long Id, string Name, long? GroupId, string? GroupName, int FieldGroupCount)>>
+        GetFormsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get a <see cref="Form"/> by its id.
@@ -68,8 +69,10 @@ internal class FormService(
     private IFormRepository FormRepository => uow.FormRepository;
     private IGroupRepository GroupRepository => uow.GroupRepository;
     private IFieldGroupRepository FieldGroupRepository => uow.FieldGroupRepository;
-    
-    public async ValueTask<IReadOnlyCollection<Form>> GetFormsAsync(CancellationToken cancellationToken = default) =>
+
+    public async
+        ValueTask<IReadOnlyCollection<(long Id, string Name, long? GroupId, string? GroupName, int FieldGroupCount)>>
+        GetFormsAsync(CancellationToken cancellationToken = default) =>
         await FormRepository.GetFormsAsync(cancellationToken);
 
     public async ValueTask<OneOf<Form, NotFound>> GetFormByIdAsync(long formId,
@@ -181,7 +184,7 @@ internal class FormService(
             {
                 FormRepository.AddFormFieldGroup(ffg);
             }
-            
+
             form.FormFieldGroups = stillItems.Concat(newFormFieldGroups).ToList();
         }
 

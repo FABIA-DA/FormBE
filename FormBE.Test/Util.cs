@@ -4,71 +4,80 @@ namespace FormBE.Test;
 
 public static class Util
 {
-    public static List<Group> GetTestGroups() =>
+    public static List<(long Id, string Name, long? ParentId, string? ParentName, int SubgroupCount, int FormCount)>
+        GetTestGroups() =>
     [
         new()
         {
             Id = 0L,
             Name = "Forms",
-            SubGroups = [],
-            Forms = []
+            ParentId = null,
+            ParentName = null,
+            SubgroupCount = 0,
+            FormCount = 0
         },
         new()
         {
             Id = 1L,
             Name = "Art",
-            SubGroups = [],
-            Forms = []
+            ParentId = null,
+            ParentName = null,
+            SubgroupCount = 0,
+            FormCount = 0
         },
         new()
         {
             Id = 2L,
             Name = "Business",
-            SubGroups = [],
-            Forms = []
+            ParentId = null,
+            ParentName = null,
+            SubgroupCount = 0,
+            FormCount = 0
         },
         new()
         {
             Id = 3L,
             Name = "Other",
-            SubGroups = [],
-            Forms = []
+            ParentId = null,
+            ParentName = null,
+            SubgroupCount = 0,
+            FormCount = 0
         }
     ];
 
-    public static List<Form> GetTestForms() =>
+    public static List<(long Id, string Name, long? GroupId, string? GroupName, int FieldGroupCount)> GetTestForms() =>
     [
         new()
         {
             Id = 0L,
             GroupId = null,
             Name = "House Building Form",
-            Group = null,
-            FormFieldGroups = []
+            GroupName = null,
+            FieldGroupCount = 0,
         },
         new()
         {
             Id = 1L,
             GroupId = null,
             Name = "Forest Work Form",
-            Group = null,
-            FormFieldGroups = []
+            GroupName = null,
+            FieldGroupCount = 0,
         },
         new()
         {
             Id = 2L,
             GroupId = null,
             Name = "Fishing Form",
-            Group = null,
-            FormFieldGroups = []
+            GroupName = null,
+            FieldGroupCount = 0,
         },
         new()
         {
             Id = 3L,
             GroupId = null,
             Name = "Business Form",
-            Group = null,
-            FormFieldGroups = []
+            GroupName = null,
+            FieldGroupCount = 0,
         }
     ];
 
@@ -104,35 +113,31 @@ public static class Util
         }
     ];
 
-    public static List<SingleChoiceField> GetTestSingleChoiceFields() =>
+    public static List<(long Id, string Name, int OptionCount)> GetTestSingleChoiceFields() =>
     [
         new()
         {
             Id = 0L,
             Name = "Gender",
-            Options = [],
-            FieldGroupSingleChoiceFields = [],
+            OptionCount = 0
         },
         new()
         {
             Id = 1L,
             Name = "Organization Status",
-            Options = [],
-            FieldGroupSingleChoiceFields = [],
+            OptionCount = 0
         },
         new()
         {
             Id = 2L,
             Name = "Personal Status",
-            Options = [],
-            FieldGroupSingleChoiceFields = [],
+            OptionCount = 0
         },
         new()
         {
             Id = 3L,
             Name = "Business Status",
-            Options = [],
-            FieldGroupSingleChoiceFields = [],
+            OptionCount = 0
         }
     ];
 
@@ -448,14 +453,66 @@ public static class Util
         },
     ];
 
-    public static List<long> GetIds(this IEnumerable<Group> coll) => coll.Select(i => i.Id).ToList();
-    public static List<long> GetIds(this IEnumerable<Form> coll) => coll.Select(i => i.Id).ToList();
+    public static List<long> GetIds(
+        this IEnumerable<(long Id, string Name, long? ParentId, string? ParentName, int SubgroupCount, int FormCount)>
+            coll) =>
+        coll.Select(i => i.Id).ToList();
+
+    public static List<long> GetIds(
+        this IEnumerable<(long Id, string Name, long? GroupId, string? GroupName, int FieldGroupCount)> coll) =>
+        coll.Select(i => i.Id).ToList();
 
     public static List<long> GetIds(
         this IEnumerable<(long Id, string Name, int SingleChoiceFieldCount, int FieldCount)> coll) =>
         coll.Select(i => i.Id).ToList();
 
-    public static List<long> GetIds(this IEnumerable<SingleChoiceField> coll) => coll.Select(i => i.Id).ToList();
+    public static List<long> GetIds(this IEnumerable<(long Id, string Name, int OptionCount)> coll) =>
+        coll.Select(i => i.Id).ToList();
 
     public static List<long> GetIds(this IEnumerable<Field> coll) => coll.Select(i => i.Id).ToList();
+
+    public static List<Group> GetGroups(
+        this IEnumerable<(long Id, string Name, long? ParentId, string? ParentName, int SubgroupCount, int FormCount)>
+            coll) =>
+        coll.Select(g => new Group()
+        {
+            Id = g.Id,
+            Name = g.Name,
+            ParentId = g.ParentId,
+            Parent = null,
+            SubGroups = [],
+            Forms = []
+        }).ToList();
+    
+    public static List<Form> GetForms(
+        this IEnumerable<(long Id, string Name, long? GroupId, string? GroupName, int FieldGroupCount)> coll) =>
+        coll.Select(f => new Form()
+        {
+            Id = f.Id,
+            Name = f.Name,
+            GroupId = f.GroupId,
+            Group = null,
+            FormFieldGroups = []
+        }).ToList();
+
+    public static List<FieldGroup> GetFieldGroups(
+        this IEnumerable<(long Id, string Name, int SingleChoiceFieldCount, int FieldCount)> coll) =>
+        coll.Select(fg => new FieldGroup()
+        {
+            Id = fg.Id,
+            Name = fg.Name,
+            FormFieldGroups = [],
+            FieldGroupSingleChoiceFields = [],
+            FieldGroupFields = []
+        }).ToList();
+
+    public static List<SingleChoiceField> GetSingleChoiceFields(
+        this IEnumerable<(long Id, string Name, int OptionCount)> coll) =>
+        coll.Select(scf => new SingleChoiceField()
+        {
+            Id = scf.Id,
+            Name = scf.Name,
+            FieldGroupSingleChoiceFields = [],
+            Options = []
+        }).ToList();
 }

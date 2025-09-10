@@ -15,15 +15,15 @@ public static class GroupExtension
             Forms = self.Forms.Select(f => f.ToFormDto(self.Id)).ToList()
         };
 
-    public static GroupListDto ToListDto(this Group self) =>
+    public static GroupListDto ToListDto(this (long Id, string Name, long? ParentId, string? ParentName, int SubgroupCount, int FormCount) self) =>
         new GroupListDto()
         {
             Id = self.Id,
             ParentId = self.ParentId,
             Name = self.Name,
-            ParentName = self.Parent?.Name,
-            SubgroupCount = self.SubGroups.Count,
-            FormCount = self.Forms.Count,
+            ParentName = self.ParentName,
+            SubgroupCount = self.SubgroupCount,
+            FormCount = self.FormCount,
         };
 
     private static SubgroupDto SubGroupToDto(this Group self) =>

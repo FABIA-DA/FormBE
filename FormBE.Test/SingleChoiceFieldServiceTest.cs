@@ -30,12 +30,12 @@ public class SingleChoiceFieldServiceTest
     [Fact]
     public async Task GetSingleChoiceFieldsAsync_Success()
     {
-        IReadOnlyCollection<SingleChoiceField> fields = Util.GetTestSingleChoiceFields();
+        IReadOnlyCollection<(long Id, string Name, int OptionCount)> fields = Util.GetTestSingleChoiceFields();
 
         _mockSingleChoiceFieldRepository.GetSingleChoiceFieldsAsync(TestContext.Current.CancellationToken)
                                         .Returns(fields);
 
-        IReadOnlyCollection<SingleChoiceField> result
+        IReadOnlyCollection<(long Id, string Name, int OptionCount)> result
             = await _singleChoiceFieldService.GetSingleChoiceFieldsAsync(TestContext.Current.CancellationToken);
 
         result.Count.Should().Be(fields.Count);

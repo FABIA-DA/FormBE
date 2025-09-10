@@ -88,7 +88,8 @@ public class FieldGroupTest
     [Fact]
     public async Task CreateFieldGroupAsync_Success()
     {
-        List<SingleChoiceField> singleChoiceFields = Util.GetTestSingleChoiceFields();
+        List<(long Id, string Name, int OptionCount)> singleChoiceFields = Util.GetTestSingleChoiceFields();
+        List<SingleChoiceField> testSingleChoiceFields = singleChoiceFields.GetSingleChoiceFields();
         List<Field> fields = Util.GetTestFields();
         List<long> singleChoiceFieldIds = singleChoiceFields.GetIds();
         List<long> fieldIds = fields.GetIds();
@@ -104,7 +105,7 @@ public class FieldGroupTest
 
         _mockSingleChoiceFieldRepository
             .GetSingleChoiceFieldsByIdsAsync(TestContext.Current.CancellationToken, singleChoiceFieldIds)
-            .Returns(singleChoiceFields);
+            .Returns(testSingleChoiceFields);
         _mockFieldRepository.GetFieldsByIdsAsync(TestContext.Current.CancellationToken, fieldIds).Returns(fields);
 
         FieldGroup result = await _fieldGroupService.CreateFieldGroupAsync(testFieldGroup.Name, singleChoiceFieldIds,
@@ -119,7 +120,8 @@ public class FieldGroupTest
     [Fact]
     public async Task UpdateFieldGroupAsync_Success()
     {
-        List<SingleChoiceField> singleChoiceFields = Util.GetTestSingleChoiceFields();
+        List<(long Id, string Name, int OptionCount)> singleChoiceFields = Util.GetTestSingleChoiceFields();
+        List<SingleChoiceField> testSingleChoiceFields = singleChoiceFields.GetSingleChoiceFields();
         List<Field> fields = Util.GetTestFields();
         List<long> singleChoiceFieldIds = singleChoiceFields.GetIds();
         List<long> fieldIds = fields.GetIds();
@@ -133,7 +135,7 @@ public class FieldGroupTest
             FieldGroupSingleChoiceFields = []
         };
 
-        testFieldGroup.FieldGroupSingleChoiceFields = singleChoiceFields.Take(2)
+        testFieldGroup.FieldGroupSingleChoiceFields = testSingleChoiceFields.Take(2)
                                                                         .Select(f => new FieldGroupSingleChoiceField()
                                                                         {
                                                                             FieldGroup = testFieldGroup,
@@ -153,7 +155,7 @@ public class FieldGroupTest
         _mockSingleChoiceFieldRepository
             .GetSingleChoiceFieldsByIdsAsync(TestContext.Current.CancellationToken,
                                              Arg.Is<List<long>>(list => list.SequenceEqual(singleChoiceFieldIds)))
-            .Returns(singleChoiceFields);
+            .Returns(testSingleChoiceFields);
         _mockFieldRepository.GetFieldsByIdsAsync(TestContext.Current.CancellationToken,
                                                  Arg.Is<List<long>>(list => list.SequenceEqual(fieldIds)))
                             .Returns(fields);

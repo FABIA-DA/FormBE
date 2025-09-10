@@ -20,7 +20,8 @@ public interface IFormRepository
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>All forms without tracking.</returns>
-    public ValueTask<IReadOnlyCollection<Form>> GetFormsAsync(CancellationToken cancellationToken = default);
+    public ValueTask<IReadOnlyCollection<(long Id, string Name, long? GroupId, string? GroupName, int FieldGroupCount)>>
+        GetFormsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get a subset of existing forms with tracking.
@@ -79,11 +80,21 @@ internal class FormRepository(DbSet<Form> forms, DbSet<FormFieldGroup> formField
         return form;
     }
 
-    public async ValueTask<IReadOnlyCollection<Form>> GetFormsAsync(CancellationToken cancellationToken = default)
+    public async
+        ValueTask<IReadOnlyCollection<(long Id, string Name, long? GroupId, string? GroupName, int FieldGroupCount)>>
+        GetFormsAsync(CancellationToken cancellationToken = default)
     {
         IQueryable<Form> query = NoTracking;
 
-        IReadOnlyCollection<Form> coll = await query.ToListAsync(cancellationToken);
+        IReadOnlyCollection<(long Id, string Name, long? GroupId, string? GroupName, int FieldGroupCount)> coll
+            = (await query
+                     .Select(f => new
+                     {
+                         Id = f.Id, Name = f.Name, GroupId = f.GroupId,
+                         GroupName = f.Group == null ? null : f.Group.Name,
+                         FieldGroupCount = f.FormFieldGroups.Count
+                     }).ToListAsync(cancellationToken))
+              .Select(f => (f.Id, f.Name, f.GroupId, f.GroupName, f.FieldGroupCount)).ToList();
 
         return coll;
     }

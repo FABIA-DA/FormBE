@@ -58,6 +58,13 @@ public sealed class SingleChoiceFieldController(
     public async ValueTask<ActionResult<SingleChoiceFieldDto>> CreateSingleChoiceField(
         [FromBody] SingleChoiceFieldCreationRequest request, CancellationToken cancellationToken = default)
     {
+        if (request.Options.Count < 2)
+        {
+            logger.LogInformation("Tried to create new single choice field with less than two options");
+
+            return BadRequest("Options must be at least two");
+        }
+        
         SingleChoiceFieldCreationRequest.Validator validator = new SingleChoiceFieldCreationRequest.Validator();
         ValidationResult valResult = await validator.ValidateAsync(request, cancellationToken);
         if (!valResult.IsValid)
@@ -93,6 +100,13 @@ public sealed class SingleChoiceFieldController(
                                   id);
 
             return BadRequest("Id must be greater than 0");
+        }
+        
+        if (request.OldOptions.Count + request.NewOptions.Count < 2)
+        {
+            logger.LogInformation("Tried to update single choice field with id {singleChoiceFieldId} with less than two options", id);
+
+            return BadRequest("Options must be at least two");
         }
 
         SingleChoiceFieldUpdateRequest.Validator validator = new SingleChoiceFieldUpdateRequest.Validator();

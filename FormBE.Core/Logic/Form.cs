@@ -10,19 +10,19 @@ public static class FormExtension
             Id = self.Id,
             GroupId = self.GroupId,
             Name = self.Name,
-            Group =  self.Group?.ToDto(),
+            Group = self.Group?.ToDto(),
             FieldGroups = self.FormFieldGroups.Select<FormFieldGroup, FieldGroupDto>(ffg => ffg.FieldGroup.ToDto())
-                                  .ToList()
+                              .ToList()
         };
 
-    public static FormListDto ToListDto(this Form self) =>
+    public static FormListDto ToListDto(this (long Id, string Name, long? GroupId, string? GroupName, int FieldGroupCount) self) =>
         new FormListDto()
         {
             Id = self.Id,
             Name = self.Name,
             GroupId = self.GroupId,
-            GroupName = self.Group?.Name,
-            FieldGroupCount = self.FormFieldGroups.Count
+            GroupName = self.GroupName,
+            FieldGroupCount = self.FieldGroupCount
         };
 }
 

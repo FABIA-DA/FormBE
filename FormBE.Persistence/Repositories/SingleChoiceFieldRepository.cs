@@ -20,7 +20,7 @@ public interface ISingleChoiceFieldRepository
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>All single choice fields without tracking.</returns>
-    public ValueTask<IReadOnlyCollection<SingleChoiceField>> GetSingleChoiceFieldsAsync(
+    public ValueTask<IReadOnlyCollection<(long Id, string Name, int OptionCount)>> GetSingleChoiceFieldsAsync(
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -110,12 +110,14 @@ internal class SingleChoiceFieldRepository(
         return field;
     }
 
-    public async ValueTask<IReadOnlyCollection<SingleChoiceField>> GetSingleChoiceFieldsAsync(
+    public async ValueTask<IReadOnlyCollection<(long Id, string Name, int OptionCount)>> GetSingleChoiceFieldsAsync(
         CancellationToken cancellationToken = default)
     {
         IQueryable<SingleChoiceField> query = NoTracking;
 
-        IReadOnlyCollection<SingleChoiceField> coll = await query.ToListAsync(cancellationToken);
+        IReadOnlyCollection<(long Id, string Name, int OptionCount)> coll
+            = (await query.Select(scf => new { Id = scf.Id, Name = scf.Name, OptionCount = scf.Options.Count })
+                          .ToListAsync(cancellationToken)).Select(scf => (scf.Id, scf.Name, scf.OptionCount)).ToList();
 
         return coll;
     }

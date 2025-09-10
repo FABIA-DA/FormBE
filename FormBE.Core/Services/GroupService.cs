@@ -13,8 +13,9 @@ public interface IGroupService
     /// Get all groups.
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>All groups.</returns>
-    public ValueTask<IReadOnlyCollection<Group>> GetGroupsAsync(CancellationToken cancellationToken = default);
+    /// <returns>All groups with a list presentation.</returns>
+    public ValueTask<IReadOnlyCollection<(long Id, string Name, long? ParentId, string? ParentName, int SubgroupCount,
+        int FormCount)>> GetGroupsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get a <see cref="Group"/> by its id.
@@ -34,9 +35,10 @@ public interface IGroupService
     /// <param name="formsIds">A list of ids for the forms.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Success"/> with the group or a <see cref="ParentNotFound"/></returns>
-    public ValueTask<OneOf<Success<Group>, ParentNotFound>> CreateGroupAsync(long? parentGroupId, string name, List<long> subGroupIds, List<long> formsIds,
-                                                                             CancellationToken cancellationToken
-                                                                                 = default);
+    public ValueTask<OneOf<Success<Group>, ParentNotFound>> CreateGroupAsync(
+        long? parentGroupId, string name, List<long> subGroupIds, List<long> formsIds,
+        CancellationToken cancellationToken
+            = default);
 
     /// <summary>
     /// Update a group by its id.
@@ -73,8 +75,10 @@ internal class GroupService(
 {
     private IGroupRepository GroupRepository => uow.GroupRepository;
     private IFormRepository FormRepository => uow.FormRepository;
-    
-    public async ValueTask<IReadOnlyCollection<Group>> GetGroupsAsync(CancellationToken cancellationToken = default) =>
+
+    public async
+        ValueTask<IReadOnlyCollection<(long Id, string Name, long? ParentId, string? ParentName, int SubgroupCount, int
+            FormCount)>> GetGroupsAsync(CancellationToken cancellationToken = default) =>
         await GroupRepository.GetGroupsAsync(cancellationToken);
 
     public async ValueTask<OneOf<Group, NotFound>> GetGroupByIdAsync(long groupId,
@@ -93,7 +97,7 @@ internal class GroupService(
     }
 
     public async ValueTask<OneOf<Success<Group>, IGroupService.ParentNotFound>> CreateGroupAsync(
-        long? parentGroupId, string name, List<long> subGroupIds,  List<long> formIds,
+        long? parentGroupId, string name, List<long> subGroupIds, List<long> formIds,
         CancellationToken cancellationToken = default)
     {
         Group group = new()
@@ -102,10 +106,10 @@ internal class GroupService(
             SubGroups = [],
             Forms = []
         };
-        
+
         if (parentGroupId.HasValue)
         {
-            Group? parent = await GroupRepository.GetGroupByIdAsync(parentGroupId.Value, false, cancellationToken);
+            Group? parent = await GroupRepository.GetGroupByIdAsync(parentGroupId.Value, true, cancellationToken);
 
             if (parent == null)
             {
@@ -117,10 +121,14 @@ internal class GroupService(
             group.ParentId = parent.Id;
             group.Parent = parent;
         }
-        
-        IReadOnlyCollection<Group> subgroups = subGroupIds.Count == 0 ? [] : await GroupRepository.GetGroupsByIdsAsync(cancellationToken, subGroupIds);
 
-        IReadOnlyCollection<Form> forms = formIds.Count == 0 ? [] : await FormRepository.GetFormsByIdsAsync(cancellationToken, formIds);
+        IReadOnlyCollection<Group> subgroups = subGroupIds.Count == 0
+            ? []
+            : await GroupRepository.GetGroupsByIdsAsync(subGroupIds, cancellationToken);
+
+        IReadOnlyCollection<Form> forms = formIds.Count == 0
+            ? []
+            : await FormRepository.GetFormsByIdsAsync(cancellationToken, formIds);
 
         group.SubGroups = subgroups.ToList();
         group.Forms = forms.ToList();
@@ -173,17 +181,18 @@ internal class GroupService(
         {
             group.Name = name;
         }
-        
+
         if (!group.SubGroups.IdsEqual(subGroupIds, g => g.Id))
         {
-            IReadOnlyCollection<Group> subGroups = await GroupRepository.GetGroupsByIdsAsync(cancellationToken, subGroupIds);
+            IReadOnlyCollection<Group> subGroups
+                = await GroupRepository.GetGroupsByIdsAsync(subGroupIds, cancellationToken);
 
             group.SubGroups = subGroups.ToList();
         }
-        
+
         HashSet<long> currentForms = group.Forms.Select(g => g.Id).ToHashSet();
         HashSet<long> newForms = formIds.ToHashSet();
-        
+
         if (!group.Forms.IdsEqual(formIds, f => f.Id))
         {
             IReadOnlyCollection<Form> forms = await FormRepository.GetFormsByIdsAsync(cancellationToken, formIds);

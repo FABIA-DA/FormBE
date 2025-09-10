@@ -14,8 +14,8 @@ public interface ISingleChoiceFieldService
     /// Get all <see cref="SingleChoiceField"/>s.
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="IReadOnlyCollection{SingleChoiceField}"/> of <see cref="SingleChoiceField"/>s.</returns>
-    public ValueTask<IReadOnlyCollection<SingleChoiceField>> GetSingleChoiceFieldsAsync(
+    /// <returns>A <see cref="IReadOnlyCollection{SingleChoiceField}"/> of fields from a <see cref="SingleChoiceField"/> specifically for list presentation.</returns>
+    public ValueTask<IReadOnlyCollection<(long Id, string Name, int OptionCount)>> GetSingleChoiceFieldsAsync(
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -68,7 +68,7 @@ internal class SingleChoiceFieldService(
     private ISingleChoiceFieldRepository SingleChoiceFieldRepository => uow.SingleChoiceFieldRepository;
     private IFieldRepository FieldRepository => uow.FieldRepository;
 
-    public async ValueTask<IReadOnlyCollection<SingleChoiceField>> GetSingleChoiceFieldsAsync(
+    public async ValueTask<IReadOnlyCollection<(long Id, string Name, int OptionCount)>> GetSingleChoiceFieldsAsync(
         CancellationToken cancellationToken = default) =>
         await SingleChoiceFieldRepository.GetSingleChoiceFieldsAsync(cancellationToken);
 

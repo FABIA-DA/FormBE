@@ -22,7 +22,8 @@ public sealed class GroupController(
     [ProducesResponseType<GroupListResponse>(StatusCodes.Status200OK)]
     public async ValueTask<ActionResult<GroupListResponse>> GetAllGroups(CancellationToken cancellationToken = default)
     {
-        IReadOnlyCollection<Group> list = await groupService.GetGroupsAsync(cancellationToken);
+        IReadOnlyCollection<(long Id, string Name, long? ParentId, string? ParentName, int SubgroupCount, int FormCount
+            )> list = await groupService.GetGroupsAsync(cancellationToken);
 
         return Ok(new GroupListResponse()
         {
@@ -41,6 +42,7 @@ public sealed class GroupController(
         if (id < 1L)
         {
             logger.LogInformation("Tried to get group with id {groupId}, but the id must be over 0", id);
+
             return BadRequest("Id must be greater than zero");
         }
 
@@ -61,7 +63,9 @@ public sealed class GroupController(
         ValidationResult valResult = await validator.ValidateAsync(request, cancellationToken);
         if (!valResult.IsValid)
         {
-            logger.LogInformation("Tried to create group with name {groupName}, but request was invalid: {errors}", request.Name, valResult.Errors);
+            logger.LogInformation("Tried to create group with name {groupName}, but request was invalid: {errors}",
+                                  request.Name, valResult.Errors);
+
             return BadRequest(valResult.Errors);
         }
 
@@ -101,6 +105,7 @@ public sealed class GroupController(
         if (id < 1L)
         {
             logger.LogInformation("Tried to update group with id {groupId}, but id must be greater than 0", id);
+
             return BadRequest("Id must be greater than zero");
         }
 
@@ -108,7 +113,9 @@ public sealed class GroupController(
         ValidationResult valResult = await validator.ValidateAsync(request, cancellationToken);
         if (!valResult.IsValid)
         {
-            logger.LogInformation("Tried to update group with id {groupId}, but request was invalid: {errors}", id, valResult.Errors);
+            logger.LogInformation("Tried to update group with id {groupId}, but request was invalid: {errors}", id,
+                                  valResult.Errors);
+
             return BadRequest(valResult.Errors);
         }
 
@@ -140,11 +147,12 @@ public sealed class GroupController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async ValueTask<IActionResult> DeleteGroupById([FromRoute] long id,
-                                                      CancellationToken cancellationToken = default)
+                                                          CancellationToken cancellationToken = default)
     {
         if (id < 1)
         {
             logger.LogInformation("Tried to delete group with id {groupId}, but id must be greater than 0", id);
+
             return BadRequest("Id must be greater than zero");
         }
 

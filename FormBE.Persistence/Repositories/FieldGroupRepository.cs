@@ -84,6 +84,9 @@ internal class FieldGroupRepository(
             .Include(f => f.FieldGroupFields)
             .ThenInclude(fgf => fgf.Field)
             .ThenInclude(f => f.FieldType)
+            .Include(f => f.FieldGroupFields)
+            .ThenInclude(fgf => fgf.Field)
+            .ThenInclude(f => f.FieldType)
             .AsSplitQuery();
 
     public async ValueTask<FieldGroup?> GetFieldGroupByIdAsync(long fieldGroupId, bool tracking = true,

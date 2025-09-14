@@ -10,7 +10,7 @@ public static class FormExtension
             Id = self.Id,
             GroupId = self.GroupId,
             Name = self.Name,
-            Group = self.Group?.ToDto(),
+            GroupName = self.Group?.Name,
             FieldGroups = self.FormFieldGroups.Select<FormFieldGroup, FieldGroupDto>(ffg => ffg.FieldGroup.ToDto())
                               .ToList()
         };
@@ -31,7 +31,7 @@ public sealed class FormDto
     public long Id { get; set; }
     public long? GroupId { get; set; }
     public required string Name { get; set; }
-    public required GroupDto? Group { get; set; }
+    public required string? GroupName { get; set; }
     public required List<FieldGroupDto> FieldGroups { get; set; }
 }
 

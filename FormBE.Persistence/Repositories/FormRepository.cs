@@ -75,6 +75,18 @@ internal class FormRepository(DbSet<Form> forms, DbSet<FormFieldGroup> formField
         Form? form = await query.Include(f => f.Group)
                                 .Include(f => f.FormFieldGroups)
                                 .ThenInclude(ffg => ffg.FieldGroup)
+                                .ThenInclude(fg => fg.FieldGroupSingleChoiceFields)
+                                .ThenInclude(fgscf => fgscf.SingleChoiceField)
+                                .ThenInclude(scf => scf.Options)
+                                .ThenInclude(o => o.OptionFields)
+                                .ThenInclude(of => of.Field)
+                                .ThenInclude(f => f.FieldType)
+                                .Include(f => f.FormFieldGroups)
+                                .ThenInclude(ffg => ffg.FieldGroup)
+                                .ThenInclude(fg => fg.FieldGroupFields)
+                                .ThenInclude(fgf => fgf.Field)
+                                .ThenInclude(f => f.FieldType)
+                                .AsSplitQuery()
                                 .FirstOrDefaultAsync(x => x.Id == formId, cancellationToken);
 
         return form;

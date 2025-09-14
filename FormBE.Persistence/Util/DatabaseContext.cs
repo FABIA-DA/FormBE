@@ -190,6 +190,6 @@ public sealed class DatabaseContext(DbContextOptions<DatabaseContext> options) :
         EntityTypeBuilder<FieldResponse> fieldResponseBuilder = modelBuilder.Entity<FieldResponse>();
         
         fieldResponseBuilder.HasKey(r => r.Id);
-        fieldResponseBuilder.Property(r => r.FieldId).ValueGeneratedOnAdd();
+        fieldResponseBuilder.Property(r => r.Id).ValueGeneratedOnAdd();
     }
 }

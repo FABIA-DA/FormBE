@@ -12,7 +12,7 @@ public static class GroupExtension
             Name = self.Name,
             ParentName = self.Parent?.Name,
             Subgroups = self.SubGroups.Select(SubGroupToDto).ToList(),
-            Forms = self.Forms.Select(f => f.ToFormDto(self.Id)).ToList()
+            Forms = self.Forms.Select(f => f.ToFormDto(self.Name)).ToList()
         };
 
     public static GroupListDto ToListDto(this (long Id, string Name, long? ParentId, string? ParentName, int SubgroupCount, int FormCount) self) =>
@@ -33,13 +33,13 @@ public static class GroupExtension
             Name = self.Name
         };
 
-    private static FormDto ToFormDto(this Form self, long groupId) =>
+    private static FormDto ToFormDto(this Form self, string groupName) =>
         new FormDto()
         {
             Id = self.Id,
-            GroupId = groupId,
+            GroupId = null,
             Name = self.Name,
-            Group = null,
+            GroupName = groupName,
             FieldGroups = self.FormFieldGroups.Select(ffg => ffg.FieldGroup.ToDto()).ToList()
         };
 }

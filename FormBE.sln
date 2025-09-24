@@ -20,6 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 		ManageMigration.ps1 = ManageMigration.ps1
 		Dockerfile = Dockerfile
 		.dockerignore = .dockerignore
+		Dockerfile.Migrations = Dockerfile.Migrations
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FormBE.Shared", "FormBE.Shared\FormBE.Shared.csproj", "{698AF90E-3F40-4CE0-8D68-1FE3E5B3AEAE}"
